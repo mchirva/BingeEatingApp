@@ -64,7 +64,19 @@ app.post('/login', function(req, res){
                 var token = jwt.sign(user, JWTKEY, {
                     expiresIn: 900 //The token expries in 15 minutes
                 });
-                res.json({error: false, data: {user: user.toJSON(), token: token}});
+                if(user.Role == 'Supporter') {
+                    knex.from('users')
+                        .where('Role', 'Participant')
+                        .then(function(participants) {
+                            res.render('pages/participants',{error: false, data: {participants: participants, token: token}});
+                        })
+                        .catch(function (err){
+                            res.status(500).json({error: true, data: {message: err.message}});
+                        })
+                }
+                else {
+                    res.json({error: false, data: {user: user.toJSON(), token: token}});
+                }
             }
         })
         .catch(function (err) {
@@ -115,6 +127,24 @@ app.post('/postPhysicalDailyLog', function (req, res) {
             .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
             });
+    }else {
+        res.json({error: true, data: {message: 'invalid token'}});
+    }
+});
+
+app.post('/getDailyLog', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        var date = req.body.date;
+        knex.from('dailySummarySheet')
+            .where('DATE(Time)', date)
+            .andWhere('UserId', req.body.userId)
+            .then(function(dailyLogs) {
+                res.render('pages/daily',{error: false, data: dailyLogs});
+            })
+            .catch(function (err){
+                res.status(500).json({error: true, data: {message: err.message}});
+            })
     }else {
         res.json({error: true, data: {message: 'invalid token'}});
     }
@@ -236,6 +266,7 @@ app.post('/getOccupiedTimes', function (req, res) {
     if(decoded){
         knex.from('appointments')
             .where('DATE(AppointmentTime)', req.body.date)
+            .andWhere('SupporterId', req.body.supporterId)
             .then(function (appointments) {
                 res.json({error: false, appointments: appointments});
             })
@@ -270,7 +301,7 @@ app.post('/getProgress', function (req, res) {
         knex('users')
             .where('UserID', req.body.userid)
             .then(function (user) {
-                res.json({error: false, progress: user.Level});
+                res.render('pages/progress',{error: false, progress: user.Level});
             })
             .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
