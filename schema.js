@@ -28,6 +28,17 @@ var Schema = {
     FruitVegetableServings: {type: 'integer', nullable: false},
     PhysicalActivity: {type: 'integer', nullable: false},
     Events: {type: 'string', maxlength: 200, nullable: false}
+  },
+  messages: {
+    MessageId: {type: 'string', maxlength: 254, nullable: false, primary: true},
+    Message: {type: 'string', maxlength: 1000, nullable: false},
+    Label: {type: 'string', maxlength: 10, nullable: false}
+  },
+  appointments: {
+    AppointmentId: {type: 'string', maxlength: 254, nullable: false, primary: true},
+    Username: {type: 'string', maxlength: 50, nullable: false},
+    SupporterId: {type: 'string', maxlength: 254, nullable: false},
+    AppontmentTime: {type: 'datetime', nullable: false}
   }
 };
 module.exports = Schema;

@@ -41,23 +41,9 @@ var WeeklySummary = Bookshelf.Model.extend({
     tableName: 'weeklysummarysheet'
 });
 
-// var CategoryItem = Bookshelf.Model.extend({
-//   tableName: 'itemCategory',
-//     category: function() {
-//         return this.belongsTo(Category, "CategoryId");
-//     },
-//     item: function() {
-//         return this.belongsTo(Item, "ItemId");
-//     }
-// });
-//
-// var Items = Bookshelf.Collection.extend({
-//   model: Item
-// });
-//
-// var Categories = Bookshelf.Collection.extend({
-//   model: Category
-// });
+var Appointments = Bookshelf.Model.extend({
+    tableName: 'appointments'
+});
 
 var selectedCategoryId = "";
 var categories = {};
@@ -202,6 +188,7 @@ app.post('/postWeeklyLog', function (req, res) {
                 res.json({error: false, data: {id: weeklySummary}});
             })
             .catch(function (err) {
+
                 res.status(500).json({error: true, data: {message: err.message}});
             });
     }else {
@@ -209,12 +196,87 @@ app.post('/postWeeklyLog', function (req, res) {
     }
 });
 
-// app.post('/getMotivationaMessage', function (req, res)) {
-//     var decoded = jwt.verify(req.body.token, JWTKEY);
-//     if(decoded){
-//
-//     }
-// }
+app.post('/getMotivationaMessage', function (req, res) {
+     var decoded = jwt.verify(req.body.token, JWTKEY);
+     if(decoded){
+         var offset = Math.random() * (10 - 1) + 1;
+        knex.from('messages')
+            .where('Label', 'req.body.label')
+            .limit(1)
+            .offset(offset)
+            .then(function(message) {
+                res.json({error: false, message: message});
+            })
+            .catch(function (err){
+                res.status(500).json({error: true, data: {message: err.message}});
+            })
+     }
+});
+
+app.post('/setAppointment', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        Appointments.forge({
+            AppointmentId: uuid.v1(),
+            Username: req.body.username,
+            SupporterId: req.body.supporterId,
+            AppointmentTime: req.body.dateTime
+            }).save(null, {method: 'insert'})
+            .then(function (appoinment) {
+                res.json({error: false, id: appoinment.AppointmentId});
+            })
+            .catch(function (err) {
+                res.status(500).json({error: true, data: {message: err.message}});
+            });
+    }
+});
+
+app.post('/getOccupiedTimes', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        knex.from('appointments')
+            .where('DATE(AppointmentTime)', req.body.date)
+            .then(function (appointments) {
+                res.json({error: false, appointments: appointments});
+            })
+            .catch(function (err) {
+                res.status(500).json({error: true, data: {message: err.message}});
+            });
+    }
+});
+
+app.post('/setProgress', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        knex('users')
+            .where('Username', req.body.username)
+            .andWhere('Role', 'Patient')
+            .update({
+                Level: req.body.level
+            })
+            .then(function (user) {
+                res.json({error: false, user: user});
+            })
+            .catch(function (err) {
+
+                res.status(500).json({error: true, data: {message: err.message}});
+            });
+    }
+});
+
+app.post('/getProgress', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        knex('users')
+            .where('UserID', req.body.userid)
+            .then(function (user) {
+                res.json({error: false, progress: user.Level});
+            })
+            .catch(function (err) {
+                res.status(500).json({error: true, data: {message: err.message}});
+            });
+    }
+});
 
 app.listen(3000,function(){
   console.log("Live at Port 3000");
