@@ -270,7 +270,7 @@ app.post('/setAppointment', function (req, res) {
             AppointmentTime: req.body.dateTime
             }).save(null, {method: 'insert'})
             .then(function (appointment) {
-                res.json({error: false, id: appointment.attributes.AppointmentId});
+                res.json({error: false, data: {id: appointment.attributes.AppointmentId}});
             })
             .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
@@ -287,7 +287,7 @@ app.post('/getOccupiedTimes', function (req, res) {
             .whereBetween('AppointmentTime', [startTime, endTime])
             .andWhere('SupporterId', req.body.supporterId)
             .then(function (appointments) {
-                res.json({error: false, appointments: appointments});
+                res.json({error: false, data: {appointments: appointments}});
             })
             .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
@@ -328,10 +328,24 @@ app.post('/getProgress', function (req, res) {
     }
 });
 
+app.post('/getMyProgress', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        knex('users')
+            .where('UserID', req.body.userid)
+            .then(function (users) {
+                res.json({error: false, data: {progress: users[0].Level}});
+            })
+            .catch(function (err) {
+                res.status(500).json({error: true, data: {message: err.message}});
+            });
+    }
+});
+
 app.post('/getChallenge', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
-        var challengeId = Math.random() * (21 - 1) + 1;
+        var challengeId = Math.floor(Math.random() * (21 - 1)) + 1;
         knex('challenges')
             .where('ChallengeId', challengeId)
             .then(function (challenge) {
