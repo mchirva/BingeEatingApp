@@ -47,11 +47,11 @@ var User = Bookshelf.Model.extend({
 });
 
 var DailySummary = Bookshelf.Model.extend({
-   tableName: 'dailySummarySheet'
+   tableName: 'dailysummarysheet'
 });
 
 var PhysicalDailySummary = Bookshelf.Model.extend({
-    tableName: 'physicalDailySummary'
+    tableName: 'physicaldailysummary'
 });
 
 var WeeklySummary = Bookshelf.Model.extend({
@@ -153,7 +153,7 @@ app.post('/getDailyLog', function (req, res) {
     if(decoded){
         var startTime = req.body.date + ' 00:00:00';
         var endTime = req.body.date + ' 23:59:59';
-        knex.from('dailySummarySheet')
+        knex.from('dailysummarysheet')
             .whereBetween('Time', [startTime, endTime])
             .andWhere('UserId', req.body.userId)
             .then(function(dailyLogs) {
@@ -173,7 +173,7 @@ app.post('/getWeeklyLog', function (req, res) {
         var lastWeek = new Date();
         lastWeek.setDate(lastWeek.getDate() - 7);
         console.log(lastWeek);
-        knex.from('dailySummarySheet')
+        knex.from('dailysummarysheet')
             .where('Time', '>', lastWeek)
             .andWhere('UserId', req.body.userId)
             .then(function(dailyLogs) {

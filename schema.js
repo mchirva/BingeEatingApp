@@ -5,7 +5,7 @@ var Schema = {
     password: {type: 'string', maxlength: 150, nullable: false},
     level: {type: 'int', nullable: false}
   },
-  dailySummarySheet: {
+  dailysummarysheet: {
     LogId: {type: 'string', maxlength: 254, nullable: false, primary: true},
     Time: {type: 'timestamp', nullable: false},
     FoodOrDrinkConsumed: {type: 'string', maxlength: 500, nullable: false},
@@ -14,7 +14,7 @@ var Schema = {
     ContextOrSetting: {type: 'string', maxlength: 50, nullable: false},
     Feelings: {type: 'string', maxlength: 500, nullable: false},
   },
-  physicalDailySummary: {
+  physicaldailysummary: {
     LogId: {type: 'string', maxlength: 254, nullable: false, primary: true},
     Time: {type: 'timestamp', nullable: false},
     PhysicalActivity: {type: 'string', maxlength: 200, nullable: false, primary: true},
