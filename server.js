@@ -17,11 +17,28 @@ var jwt    = require('jsonwebtoken');
 
 var app = express();
 
+app.use(require('morgan')('dev'));
+
+var session = require('express-session');
+
+var FileStore = require('session-file-store')(session);
+
+app.use(session({
+    name: 'server-session-cookie-id',
+    secret: 'binge secret',
+    saveUninitialized: true,
+    resave: true,
+    store: new FileStore()
+}));
+
 var JWTKEY = 'BingeEating'; // Key for Json Web Token
 
 // body-parser middleware for handling request variables
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
+
+//to render images
+app.use(express.static(__dirname + '/images'))
 
 app.set('view engine', 'ejs');
 
@@ -45,9 +62,6 @@ var Appointments = Bookshelf.Model.extend({
     tableName: 'appointments'
 });
 
-var selectedCategoryId = "";
-var categories = {};
-
 app.get('/', function(req, res) {
    res.render('pages/login');
 });
@@ -64,9 +78,11 @@ app.post('/login', function(req, res){
                 var token = jwt.sign(user, JWTKEY, {
                     expiresIn: 900 //The token expries in 15 minutes
                 });
-                if(user.Role == 'Supporter') {
+                req.session.userId = user.attributes.UserId;
+                if(user.attributes.Role == 'Supporter') {
                     knex.from('users')
                         .where('Role', 'Participant')
+                        .andWhere('SupporterId', user.attributes.UserId)
                         .then(function(participants) {
                             res.render('pages/participants',{error: false, data: {participants: participants, token: token}});
                         })
@@ -117,7 +133,7 @@ app.post('/postPhysicalDailyLog', function (req, res) {
             LogId: uuid.v1(),
             UserId: req.body.userid,
             Time: req.body.time,
-            PhysicalActivity: req.body.consumed,
+            PhysicalActivity: req.body.workout,
             MinutesPerformed: req.body.minutes
         })
             .save(null, {method: 'insert'})
@@ -135,9 +151,10 @@ app.post('/postPhysicalDailyLog', function (req, res) {
 app.post('/getDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
-        var date = req.body.date;
+        var startTime = req.body.date + ' 00:00:00';
+        var endTime = req.body.date + ' 23:59:59';
         knex.from('dailySummarySheet')
-            .where('DATE(Time)', date)
+            .whereBetween('Time', [startTime, endTime])
             .andWhere('UserId', req.body.userId)
             .then(function(dailyLogs) {
                 res.render('pages/daily',{error: false, data: dailyLogs});
@@ -226,12 +243,12 @@ app.post('/postWeeklyLog', function (req, res) {
     }
 });
 
-app.post('/getMotivationaMessage', function (req, res) {
+app.post('/getMotivationalMessage', function (req, res) {
      var decoded = jwt.verify(req.body.token, JWTKEY);
      if(decoded){
-         var offset = Math.random() * (10 - 1) + 1;
+         var offset = Math.floor(Math.random() * (10 - 1)) + 1;
         knex.from('messages')
-            .where('Label', 'req.body.label')
+            .where('Label', req.body.label)
             .limit(1)
             .offset(offset)
             .then(function(message) {
@@ -248,12 +265,12 @@ app.post('/setAppointment', function (req, res) {
     if(decoded){
         Appointments.forge({
             AppointmentId: uuid.v1(),
-            Username: req.body.username,
+            UserId: req.body.userid,
             SupporterId: req.body.supporterId,
             AppointmentTime: req.body.dateTime
             }).save(null, {method: 'insert'})
-            .then(function (appoinment) {
-                res.json({error: false, id: appoinment.AppointmentId});
+            .then(function (appointment) {
+                res.json({error: false, id: appointment.attributes.AppointmentId});
             })
             .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
@@ -264,8 +281,10 @@ app.post('/setAppointment', function (req, res) {
 app.post('/getOccupiedTimes', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
+        var startTime = req.body.date + ' 00:00:00';
+        var endTime = req.body.date + ' 23:59:59';
         knex.from('appointments')
-            .where('DATE(AppointmentTime)', req.body.date)
+            .whereBetween('AppointmentTime', [startTime, endTime])
             .andWhere('SupporterId', req.body.supporterId)
             .then(function (appointments) {
                 res.json({error: false, appointments: appointments});
@@ -281,7 +300,7 @@ app.post('/setProgress', function (req, res) {
     if(decoded){
         knex('users')
             .where('Username', req.body.username)
-            .andWhere('Role', 'Patient')
+            .andWhere('Role', 'Participant')
             .update({
                 Level: req.body.level
             })
@@ -300,8 +319,23 @@ app.post('/getProgress', function (req, res) {
     if(decoded){
         knex('users')
             .where('UserID', req.body.userid)
-            .then(function (user) {
-                res.render('pages/progress',{error: false, progress: user.Level});
+            .then(function (users) {
+                res.render('pages/progress',{error: false, progress: users[0].Level});
+            })
+            .catch(function (err) {
+                res.status(500).json({error: true, data: {message: err.message}});
+            });
+    }
+});
+
+app.post('/getChallenge', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        var challengeId = Math.random() * (21 - 1) + 1;
+        knex('challenges')
+            .where('ChallengeId', challengeId)
+            .then(function (challenge) {
+                res.json({error: false, data: {challenge: challenge}});
             })
             .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
