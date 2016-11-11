@@ -6,9 +6,9 @@
         var progress =<%-JSON.stringify(progress)%>;
         $(document).ready(function(){
             for(var i=0;i<parseInt(progress);i++){
-            document.getElementById(i+1).checked=true;
+                document.getElementById(i+1).checked=true;
             }
-        var data=JSON.stringify()    
+            var data=JSON.stringify()
         });
 
         function updateProgress(){
@@ -18,15 +18,15 @@
                     count=count + 1;
             }
 
-            $.post("http://localhost:3000/setProgress",{token:sessionStorage.getItem('Token'), username: sessionStorage.getItem('UserName'),level:count},function(data){  
+            $.post("http://localhost:3000/setProgress",{token:sessionStorage.getItem('Token'), username: sessionStorage.getItem('UserName'),level:count},function(data){
                 alert("The progress has been updated");
             });
         }
 
         function getDailySummary(){
-            
 
-        
+
+
         }
         function init(){
             var today = new Date();
@@ -39,91 +39,92 @@
             document.getElementById("userid1").value=sessionStorage.getItem('UserId');
             document.getElementById("token2").value=sessionStorage.getItem('Token');
             document.getElementById("userid2").value=sessionStorage.getItem('UserId');
+            document.getElementById("token3").value=sessionStorage.getItem('Token');
+            document.getElementById("userid3").value=sessionStorage.getItem('UserId');
             document.getElementById("date").value=today;
-            console.log(document.getElementById("date").value);
+
+            console.log(document.getElementById("token3").value);
+            console.log(document.getElementById("userid3").value);
         }
 
-        
+
     </script>
 </head>
 <body onLoad="init()">
 <header >
     <% include ../partials/header %>
     <div class="navbar-wrapper">
-    <div class="container">
-        <div class="navbar navbar-static-top" role="navigation">
-        <div class="container full-width">
-        <div class="collapse navbar-collapse" >
-          <ul class="nav navbar-nav">
-            <li class="active">
-                <form action="/getProgress" method="post" accept-charset="UTF-8" role="form">
-                    <fieldset>
-                        <div class="form-group">
-                            <input class="form-control" name="token" id="token1" type="hidden" value="">
-                        </div>
-                        <div class="form-group">
-                            <input class="form-control" name="userid" id="userid1" type="hidden" value="">
-                        </div>
-                        <input class="btn btn-lg btn-block" id="submit" type="submit" value="View/Edit Progress">
-                    </fieldset>
-                </form>
-            </li>
-            <li style="margin-left: 10px;">
-                <form action="/getDailyLog" method="post" accept-charset="UTF-8" role="form" >
-                    <fieldset>
-                        <div class="form-group">
-                            <input class="form-control" name="token" id="token2" type="hidden" value="">
-                        </div>
-                        <div class="form-group">
-                            <input class="form-control" name="userId" id="userid2" type="hidden" value="">
-                        </div>
-                        <div class="form-group">
-                            <input class="form-control" name="date" id="date" type="hidden" value="">
-                        </div>
-                        <input class="btn btn-lg btn-block" id="submit" type="submit" value='Get Daily Summary' >
-                    </fieldset>
-                </form>
-            </li>
-            <li style="margin-left: 10px;">
-                <form action="" method="post" accept-charset="UTF-8" role="form" >
-                    <fieldset>
-                        <div class="form-group">
-                            <input class="form-control" name="token" id="token2" type="hidden" value="">
-                        </div>
-                        <div class="form-group">
-                            <input class="form-control" name="userid" id="userid2" type="hidden" value="">
-                        </div>
-                        <div class="form-group">
-                            <input class="form-control" name="date" id="date" type="hidden" value="">
-                        </div>
-                        <input class="btn btn-lg btn-block" id="submit" type="submit" value='Get Weekly Summary' >
-                    </fieldset>
-                </form>
-            </li>
-            <li style="margin-left: 10px;">
-                <form action="" method="post" accept-charset="UTF-8" role="form" >
-                    <fieldset>
-                        <div class="form-group">
-                            <input class="form-control" name="token" id="token2" type="hidden" value="">
-                        </div>
-                        <div class="form-group">
-                            <input class="form-control" name="userid" id="userid2" type="hidden" value="">
-                        </div>
-                        <div class="form-group">
-                            <input class="form-control" name="date" id="date" type="hidden" value="">
-                        </div>
-                        <input class="btn btn-lg btn-block" id="submit" type="submit" value='Schedule an appointment' >
-                    </fieldset>
-                </form>
-            </li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a class="btn btn-block" href="/">Logout</a></li>
-          </ul>
-        </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
-    </div>
-    </div>
+        <div class="container">
+            <div class="navbar navbar-static-top" role="navigation">
+                <div class="container full-width">
+                    <div class="collapse navbar-collapse" >
+                        <ul class="nav navbar-nav">
+                            <li class="active">
+                                <form action="/getProgress" method="post" accept-charset="UTF-8" role="form">
+                                    <fieldset>
+                                        <div class="form-group">
+                                            <input class="form-control" name="token" id="token1" type="hidden" value="">
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" name="userid" id="userid1" type="hidden" value="">
+                                        </div>
+                                        <input class="btn btn-lg btn-block" id="submit" type="submit" value="View/Edit Progress">
+                                    </fieldset>
+                                </form>
+                            </li>
+                            <li style="margin-left: 10px;">
+                                <form action="/getDailyLog" method="post" accept-charset="UTF-8" role="form" >
+                                    <fieldset>
+                                        <div class="form-group">
+                                            <input class="form-control" name="token" id="token2" type="hidden" value="">
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" name="userId" id="userid2" type="hidden" value="">
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" name="date" id="date" type="hidden" value="">
+                                        </div>
+                                        <input class="btn btn-lg btn-block" id="submit" type="submit" value='Get Daily Summary' >
+                                    </fieldset>
+                                </form>
+                            </li>
+                            <li style="margin-left: 10px;">
+                                <form action="/getWeeklyLog" method="post" accept-charset="UTF-8" role="form" >
+                                    <fieldset>
+                                        <div class="form-group">
+                                            <input class="form-control" name="token" id="token3" type="hidden" value="">
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" name="userId" id="userid3" type="hidden" value="">
+                                        </div>
+                                        <input class="btn btn-lg btn-block" id="submit" type="submit" value='Get Weekly Summary' >
+                                    </fieldset>
+                                </form>
+                            </li>
+                            <li style="margin-left: 10px;">
+                                <form action="" method="post" accept-charset="UTF-8" role="form" >
+                                    <fieldset>
+                                        <div class="form-group">
+                                            <input class="form-control" name="token" id="token2" type="hidden" value="">
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" name="userid" id="userid2" type="hidden" value="">
+                                        </div>
+                                        <div class="form-group">
+                                            <input class="form-control" name="date" id="date" type="hidden" value="">
+                                        </div>
+                                        <input class="btn btn-lg btn-block" id="submit" type="submit" value='Schedule an appointment' >
+                                    </fieldset>
+                                </form>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li><a class="btn btn-block" href="/">Logout</a></li>
+                        </ul>
+                    </div><!-- /.navbar-collapse -->
+                </div><!-- /.container-fluid -->
+            </div>
+        </div>
     </div>
 </header>
 
@@ -138,9 +139,9 @@
                     <div class="panel-body">
                         <table>
                             <% for(var i=0; i < 8; i++) { %>
-                               <tr>
-                                 <label><input type="checkbox" id="<%= i+1 %>" > Step <%= i+1 %></label><br>
-                               </tr>
+                            <tr>
+                                <label><input type="checkbox" id="<%= i+1 %>" > Step <%= i+1 %></label><br>
+                            </tr>
                             <% } %>
                         </table>
                         <br/>
