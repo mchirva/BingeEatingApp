@@ -155,7 +155,7 @@ app.post('/getDailyLog', function (req, res) {
         var endTime = req.body.date + ' 23:59:59';
         knex.from('dailysummarysheet')
             .whereBetween('Time', [startTime, endTime])
-            .andWhere('UserId', req.body.userId)
+            .andWhere('UserId', req.body.userid)
             .then(function(dailyLogs) {
                 res.render('pages/daily',{error: false, data: dailyLogs});
             })
