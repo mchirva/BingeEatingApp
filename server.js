@@ -4,7 +4,7 @@ var knex = require('knex')({
         host     : 'localhost',
         user     : 'root',
         password : 'bazzinga',
-        database : 'BingeEatingDb',
+        database : 'bingeeatingdb',
         charset  : 'utf8'
   }
 });
