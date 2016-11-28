@@ -14,7 +14,7 @@ var Bookshelf = require('bookshelf')(knex);
 var uuid = require('uuid');
 var bodyParser = require('body-parser');
 var jwt    = require('jsonwebtoken');
-var push = require('./modelObject');
+//var push = require('./modelObject');
 var crypto = require('crypto');
 
 var options = {
