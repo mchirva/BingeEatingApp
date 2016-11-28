@@ -27,7 +27,9 @@ var Schema = {
     VLD: {type: 'integer', nullable: false},
     FruitVegetableServings: {type: 'integer', nullable: false},
     PhysicalActivity: {type: 'integer', nullable: false},
-    Events: {type: 'string', maxlength: 200, nullable: false}
+    Events: {type: 'string', maxlength: 200, nullable: false},
+    CreatedDateTime: {type: 'datetime', nullable: false},
+    UpdatedDateTime: {type: 'datetime', nullable: false}
   },
   messages: {
     MessageId: {type: 'string', maxlength: 254, nullable: false, primary: true},
