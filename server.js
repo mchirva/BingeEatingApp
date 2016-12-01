@@ -16,6 +16,8 @@ var bodyParser = require('body-parser');
 var jwt    = require('jsonwebtoken');
 //var push = require('./modelObject');
 var crypto = require('crypto');
+var cron = require('node-cron');
+var cors = require('cors');
 
 var options = {
     cert: 'keys/cert.pem',
@@ -48,9 +50,10 @@ var JWTKEY = 'BingeEating'; // Key for Json Web Token
 // body-parser middleware for handling request variables
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
+app.use(cors());
 
 //to render images
-app.use(express.static(__dirname + '/images'))
+app.use(express.static(__dirname + '/views'))
 
 app.set('view engine', 'ejs');
 
@@ -76,6 +79,22 @@ var Appointments = Bookshelf.Model.extend({
 
 app.get('/', function(req, res) {
    res.render('pages/login');
+});
+
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin',"*");
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader("Access-Control-Allow-Headers", "*");
+
+    res.setHeader('Access-Control-Expose-Headers','*');
+
+    // Pass to next layer of middleware
+    next();
 });
 
 // function sendPushForDevice(withToken, pushMessage, callback){
@@ -122,31 +141,42 @@ app.post('/login', function(req, res){
         .fetch()
         .then(function (user){
             if (!user) {
-                res.render('pages/participants',{error: true, data: {message: "Invalid user credentials"}});
+                res.json({error: true, data: {message: "Invalid username"}});
             }else {
-                var token = jwt.sign(user, JWTKEY, {
-                    expiresIn: 900 //The token expries in 15 minutes
-                });
-                req.session.user = user.attributes;
-                if(req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-                    knex('activity').innerJoin('users', 'activity.UserId', 'users.UserId')
-                        .where('users.SupporterId', req.session.user.UserId)
-                        .andWhereBetween('activity.ActivityDateTime', [new Date() - 1, new Date()])
-                        .then(function (activities) {
-                            //res.render('pages/newsfeed', {error: false, token: token, data :{activities: activities}});
-                            res.json({error: false, token: token, data :{activities: activities}});
-                        })
-                        .catch( function (err) {
-                            res.render('pages/newsfeed', {error: true, data :{message: err.message}});
-                        })
-                }
-                else {
-                    res.render('pages/login', {error: true, data: {message: 'Oops! Only supporters can login using the web portal!'}});
-                }
+                // var userPassword = sha512(password, user.attributes.salt);
+                // if (userPassword == user.attributes.HashedPassword) {
+                    var token = jwt.sign(user, JWTKEY, {
+                        expiresIn: 900 //The token expries in 15 minutes
+                    });
+                    req.session.user = user.attributes;
+                    if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
+                        knex('activity').innerJoin('users', 'activity.UserId', 'users.UserId')
+                            .where('users.SupporterId', req.session.user.UserId)
+                            .andWhereBetween('activity.ActivityDateTime', [new Date() - 1, new Date()])
+                            .then(function (activities) {
+                                console.log('came in');
+                                res.json({error: false, token: token, data: {activities: activities}});
+                            })
+                            .catch(function (err) {
+                                res.json({error: true, data: {message: err.message}});
+                            })
+                    }
+                    else {
+                        res.json({
+                            error: true,
+                            data: {message: 'Oops! Only supporters can login using the web portal!'}
+                        });
+                    }
+                // }
+                // else {
+                //     if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
+                //
+                //     }
+                // }
             }
         })
         .catch(function (err) {
-            res.render('pages/participants', {error: true, data: {message: err.message}});
+            res.json({error: true, data: {message: err.message}});
         });
 });
 
@@ -674,6 +704,16 @@ app.post('/getChallenge', function (req, res) {
     }
 });
 
+cron.schedule('0 8 * * *', function(){
+    var tomorrow = new Date() + 1;
+    knex('appointments').innerJoin('users', 'appointments.UserId', 'user.UserId')
+        .whereBetween('AppointmentTime', tomorrow , tomorrow + 1)
+        .then( function (appointmentUsers) {
+            //push for these users
+            console.log('push notification');
+        })
+});
+
 app.post('/createUser', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
@@ -685,5 +725,5 @@ app.post('/createUser', function (req, res) {
 });
 
 app.listen(8080,function(){
-  console.log("Live at Port 8080");
+    console.log("Live at Port 8080");
 });

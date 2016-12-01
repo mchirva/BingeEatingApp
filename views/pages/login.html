@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+    <script type="text/javascript">
+
+        $("#submit").click(function(){
+            console.log("abc");
+        // $.ajax({
+        //         url:(Your url),
+        //         dataType:'json',
+        //         type: 'post',
+        //         data: yourForm.serialize(),
+        //         success:function(response){
+        //         }
+        //     });
+        });
+    </script>
+</head>
+<body>
+<section class="cd-intro">
+    <div class="cd-intro-content bouncy">
+        <h1>WOMEN'S HEALTH PROJECT</h1>
+        <p>UNC CHARLOTTE PYSCHOLOGY DEPARTMENT RESEARCH</p>
+        <nav class="main-nav">
+            <ul>
+                <li><a class="cd-signin" href="#0">SIGN IN</a></li>
+            </ul>
+        </nav>
+    </div>
+</section>
+<div class="cd-user-modal"> 
+    <div class="cd-user-modal-container"> 
+            <div class="cd-switcher">
+            <a href="#0">SIGN IN</a></div>
+
+        <div id="cd-login"> 
+            <form class="cd-form" action="/login" method="post" >
+                <p class="fieldset">
+                    <label class="image-replace cd-username" for="signup-username">Username</label>
+                    <input class="full-width has-padding has-border" id="signup-username" name="username" type="text" placeholder="Username">
+                    <span class="cd-error-message">Error message here!</span>
+                </p>
+
+                <p class="fieldset">
+                    <label class="image-replace cd-password" for="signin-password">Password</label>
+                    <input class="full-width has-padding has-border" id="signin-password" name="password" type="text"  placeholder="Password">
+                    <a href="#0" class="hide-password">Hide</a>
+                    <span class="cd-error-message">Error message here!</span>
+                </p>
+                <p class="fieldset">
+                    <input type="checkbox" id="remember-me" checked>
+                    <label for="remember-me">Remember me</label>
+                </p>
+
+                <p class="fieldset">
+                    <input class="full-width" id="submit" type="submit" value="LOGIN">
+                </p>
+            </form>
+            
+            <p class="cd-form-bottom-message"><a href="#0">Forgot your password?</a></p>
+        </div> 
+
+        <div id="cd-reset-password"> 
+            <p class="cd-form-message">Lost your password? Reset here.</p>
+
+            <form class="cd-form">
+                <p class="fieldset">
+                    <label class="image-replace cd-password" for="signin-password">Password</label>
+                    <input class="full-width has-padding has-border" id="signin-password" type="text"  placeholder="Password">
+                    <a href="#0" class="hide-password">Hide</a>
+                    <span class="cd-error-message">Error message here!</span>
+                </p>
+                <p class="fieldset">
+                    <label class="image-replace cd-password" for="signin-password">Confirm Password</label>
+                    <input class="full-width has-padding has-border" id="signin-password" type="text"  placeholder="Confirm Password">
+                    <a href="#0" class="hide-password">Hide</a>
+                    <span class="cd-error-message">Error message here!</span>
+                </p>
+
+                <p class="fieldset">
+                    <input class="full-width has-padding" type="submit" value="Reset password">
+                </p>
+            </form>
+
+            <p class="cd-form-bottom-message"><a href="#0">Back to log-in</a></p>
+        </div> 
+        <a href="#0" class="cd-close-form">Close</a>
+    </div> 
+</div> 
+<footer style="position:fixed;right: 0;bottom: 0;left: 0;padding: 1rem;background-color: #efefef;text-align: center;">
+    <% include ../partials/footer %>
+</footer>
+
+<script src="js/main.js"></script> 
+</body>
+</html>
