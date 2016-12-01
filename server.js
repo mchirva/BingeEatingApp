@@ -141,7 +141,7 @@ app.post('/login', function(req, res){
         .fetch()
         .then(function (user){
             if (!user) {
-                res.json({error: true, data: {message: "Invalid username"}});
+                res.json({error: true, data: {message: "Invalid credentials"}});
             }else {
                 // var userPassword = sha512(password, user.attributes.Salt);
                 // if (userPassword == user.attributes.HashedPassword) {
@@ -192,20 +192,26 @@ var sha512 = function(password, salt){
 
 
 app.post('/getNewsFeed', function (req, res) {
-    if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-        knex('activity').innerJoin('users', 'activity.UserId', 'users.UserId')
-            .where('users.SupporterId', req.session.user.UserId)
-            .andWhereBetween('activity.ActivityDateTime', [new Date() - 1, new Date()])
-            .then(function (activities) {
-                res.send({error: false, data :{activities: activities}});
-            })
-            .catch( function (err) {
-                res.send({error: true, data :{message: err.message}});
-            })
-    } else {
-        res.render('pages/login');
+    if(jwt.verify(req.body.token, JWTKEY)) {
+        if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
+            knex('activity').innerJoin('users', 'activity.UserId', 'users.UserId')
+                .where('users.SupporterId', req.session.user.UserId)
+                .then(function (activities) {
+                    res.send({error: false, data: {activities: activities}});
+                })
+                .catch(function (err) {
+                    res.send({error: true, data: {message: err.message}});
+                })
+
+        } else {
+            res.send({error: true, data: {message: 'Participants cannot login using web portal!'}});
+        }
+    }
+    else {
+         res.send({error: true, data: {message: 'invalid token'}});
     }
 });
+
 
 app.post('/signin', function(req, res){
     var username = req.body.username;
@@ -341,8 +347,7 @@ app.post('/getDailyLog', function (req, res) {
             .andWhere('UserId', Id)
             .then(function(dailyLogs) {
                 if(req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
-                    //res.render('pages/daily', {error: false, data: {dailyLogs: dailyLogs}});
-                    res.json({error: false, data: {dailyLogs: dailyLogs}});
+                    res.send({error: false, data: {dailyLogs: dailyLogs}});
                 }
                 else {
                     res.status(200).json({error: false, data: {dailyLogs: dailyLogs}});
@@ -350,10 +355,10 @@ app.post('/getDailyLog', function (req, res) {
 
             })
             .catch(function (err){
-                res.status(500).json({error: true, data: {message: err.message}});
+                res.status(500).send({error: true, data: {message: err.message}});
             })
     }else {
-        res.status(401).json({error: true, data: {message: 'invalid token'}});
+        res.status(401).send({error: true, data: {message: 'invalid token'}});
     }
 });
 
@@ -376,7 +381,7 @@ app.post('/getNewWeeklyLog', function (req, res) {
                         vld++;
                     }
                 }
-                knex('physicaldailysummary').count('LogId')
+                knex('physicaldailysummary').count('LogId as count')
                     .where('MinutesPerformed', '>', 30)
                     .andWhere('UserId', req.session.user.UserId)
                     .andWhere('Time','>', lastWeek)
@@ -387,7 +392,7 @@ app.post('/getNewWeeklyLog', function (req, res) {
                             week: req.body.week,
                             Binges: binges,
                             VLD: vld,
-                            PhysicalActivity: count,
+                            PhysicalActivity: count[0].count,
                             CreatedDateTime: new Date()
                         }).save(null, {method: 'insert'})
                             .then(function (weeklyLog) {
@@ -428,8 +433,7 @@ app.post('/getWeeklyLog', function (req, res) {
             .andWhere('UserId', Id)
             .then(function (weeklyLog) {
                 if (req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
-                    //res.render('pages/weekly', {error: false, data: {weeklyLog: weeklyLog}});
-                    res.json({error: false, data: {weeklyLog: weeklyLog}});
+                    res.send({error: false, data: {weeklyLog: weeklyLog}});
                 }
                 else {
                     res.status(200).json({error: false, data: {weeklyLog: weeklyLog}});
@@ -437,7 +441,7 @@ app.post('/getWeeklyLog', function (req, res) {
             })
             .catch(function (err) {
                 if (req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
-                    res.render('pages/weekly', {error: true, data: {message: err.message}});
+                    res.send({error: true, data: {message: err.message}});
                 }
                 else {
                     res.status(200).json({error: false, data: {message: err.message}});
@@ -448,7 +452,7 @@ app.post('/getWeeklyLog', function (req, res) {
             res.status(401).json({error: true, data: {message: 'invalid token'}});
         }
         else {
-            res.render('pages/weekly', {error: true, data: {message: 'invalid token'}});
+            res.send({error: true, data: {message: 'invalid token'}});
         }
     }
 });
@@ -463,8 +467,10 @@ app.post('/postWeeklyLog', function (req, res) {
                 Binges: req.body.binges,
                 VLD: req.body.vld,
                 PhysicalActivity: req.body.physical,
+                Weight: req.body.weight,
                 FruitVegetableServings: req.body.fv,
                 Events: req.body.events,
+                GoodDays: req.body.goodDays,
                 UpdatedDateTime: new Date()
             })
             .then(function (weeklySummary) {
@@ -534,8 +540,7 @@ app.post('/viewNotes', function (req, res) {
             .andWhere('SupporterId', supporter)
             .then( function (notes) {
                 if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-                    //res.render('pages/notes', {error: false, data: {notes: notes}});
-                    res.json({error: false, data: {notes: notes}});
+                    res.send({error: false, data: {notes: notes}});
                 }
                 else {
                     res.status(200).json({error: false, data: {notes: notes}});
@@ -543,7 +548,7 @@ app.post('/viewNotes', function (req, res) {
             })
             .catch( function (err) {
                 if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-                    res.render('pages/notes', {error: true, data: {message: err.message}});
+                    res.send({error: true, data: {message: err.message}});
                 }
                 else {
                     res.status(200).json({error: true, data: {message: err.message}});
@@ -581,15 +586,14 @@ app.post('/setAppointment', function (req, res) {
             AppointmentTime: req.body.dateTime
             }).save(null, {method: 'insert'})
             .then(function (appointment) {
-                //res.render('pages/appointment', {error: false, data: {id: appointment.attributes.AppointmentId}});
-                res.json({error: false, data: {id: appointment.attributes.AppointmentId}});
+                res.send({error: false, data: {id: appointment.attributes.AppointmentId}});
             })
             .catch(function (err) {
-                res.render('pages/appointment', {error: true, data: {message: err.message}});
+                res.send({error: true, data: {message: err.message}});
             });
     }
     else {
-        res.render('pages/appointment', {error: true, data: {message: 'invalid token'}});
+        res.send({error: true, data: {message: 'invalid token'}});
     }
 });
 
@@ -602,17 +606,14 @@ app.post('/getOccupiedTimes', function (req, res) {
             .whereBetween('AppointmentTime', [startTime, endTime])
             .andWhere('SupporterId', req.session.user.UserId)
             .then(function (appointments) {
-                //res.render('pages/appointment', {error: false, data: {appointments: appointments}});
-                res.json({error: false, data: {appointments: appointments}});
+                res.send({error: false, data: {appointments: appointments}});
             })
             .catch(function (err) {
-                //res.render('pages/appointment', {error: true, data: {message: err.message}});
-                res.json({error: true, data: {message: err.message}});
+                res.send({error: true, data: {message: err.message}});
             });
     }
     else {
-        //res.render('pages/appointment', {error: true, data: {message: 'invalid token'}});
-        res.json({error: true, data: {message: 'invalid token'}});
+        res.send({error: true, data: {message: 'invalid token'}});
     }
 });
 
@@ -629,7 +630,12 @@ app.post('/getMyAppointments', function (req, res) {
         knex.from('appointments')
             .where('UserId', id)
             .then (function (appointments) {
-                res.status(200).json({error: false, data: {appointments: appointments}});
+                if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
+                    res.send({error: false, data: {appointments: appointments}});
+                }
+                else {
+                    res.status(200).json({error: false, data: {appointments: appointments}});
+                }
             })
             .catch( function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
@@ -650,11 +656,10 @@ app.post('/setProgress', function (req, res) {
                 Level: req.body.level
             })
             .then(function (user) {
-                //res.render('pages/progress', {error: false, data: {user: user}});
-                res.json({error: false, user: user});
+                res.send({error: false, user: user});
             })
             .catch(function (err) {
-                res.status(500).json({error: true, data: {message: err.message}});
+                res.send({error: true, data: {message: err.message}});
             });
     }
 });
@@ -673,8 +678,7 @@ app.post('/getProgress', function (req, res) {
             .where('UserID', Id)
             .then(function (users) {
                 if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-                    //res.render('pages/progress', {error: false, data: {progress: users[0].Level}});
-                    res.json({error: false, data: {progress: users[0].Level}});
+                    res.send({error: false, data: {progress: users[0].Level}});
                 }
                 else {
                     res.json({error: false, data: {progress: users[0].Level}});
@@ -682,7 +686,7 @@ app.post('/getProgress', function (req, res) {
             })
             .catch(function (err) {
                 if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-                    res.render('pages/progress', {error: false, data: {message: err.message}});
+                    res.send({error: false, data: {message: err.message}});
                 }
                 else {
                     res.status(500).json({error: true, data: {message: err.message}});
@@ -744,6 +748,11 @@ var getSupporterId = function(supporterEmail){
         })
 };
 
+app.get('/logout', function (req, res){
+        req.session.destroy();
+        //remove deviceID
+});
+
 app.post('/createUser', function (req, res) {
     //var decoded = jwt.verify(req.body.token, JWTKEY);
     //if(decoded) {
@@ -752,10 +761,8 @@ app.post('/createUser', function (req, res) {
             supporterId = req.body.supporterEmail;
         }
         else {
-            console.log(getSupporterId(req.body.supporterEmail));
             supporterId = getSupporterId(req.body.supporterEmail);
         }
-    console.log(supporterId);
         var salt = genRandomString(16);
         knex('users')
             .insert({
