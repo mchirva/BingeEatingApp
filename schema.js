@@ -1,14 +1,21 @@
 var Schema = {
   users: {
-    id: {type: 'string', maxlength: 254, nullable: false, primary: true},
-    username: {type: 'string', maxlength: 254, nullable: false, unique: true},
-    password: {type: 'string', maxlength: 150, nullable: false},
-    level: {type: 'int', nullable: false}
+    UserId: {type: 'string', maxlength: 254, nullable: false, primary: true},
+    Username: {type: 'string', maxlength: 254, nullable: false, unique: true},
+    HashedPassword: {type: 'string', maxlength: 150, nullable: false},
+    Salt: {type: 'string', maxlength: 200, nullable: false},
+    Role: {type: 'string', maxlength: 50, nullable: false},
+    Level: {type: 'int', nullable: false},
+    SupporterId: {type: 'string', maxlength: 254, nullable: false, primary: true},
+    Score: {type: 'int', nullable: false},
+    Messages: {type: 'int', nullable: false},
+    ImageTagging: {type: 'int', nullable: false}
   },
   dailysummarysheet: {
     LogId: {type: 'string', maxlength: 254, nullable: false, primary: true},
     Time: {type: 'timestamp', nullable: false},
     FoodOrDrinkConsumed: {type: 'string', maxlength: 500, nullable: false},
+    FVNumberOfServings: {type: 'integer', nullable: false},
     Binge: {type: 'integer', nullable: false},
     VomitingOrLaxative: {type: 'integer', nullable: false},
     ContextOrSetting: {type: 'string', maxlength: 50, nullable: false},
@@ -27,7 +34,9 @@ var Schema = {
     VLD: {type: 'integer', nullable: false},
     FruitVegetableServings: {type: 'integer', nullable: false},
     PhysicalActivity: {type: 'integer', nullable: false},
+    Weight: {type: 'float', nullable: false},
     Events: {type: 'string', maxlength: 200, nullable: false},
+    GoodDays: {type: 'integer', nullable: false},
     CreatedDateTime: {type: 'datetime', nullable: false},
     UpdatedDateTime: {type: 'datetime', nullable: false}
   },

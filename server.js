@@ -143,7 +143,7 @@ app.post('/login', function(req, res){
             if (!user) {
                 res.json({error: true, data: {message: "Invalid username"}});
             }else {
-                // var userPassword = sha512(password, user.attributes.salt);
+                // var userPassword = sha512(password, user.attributes.Salt);
                 // if (userPassword == user.attributes.HashedPassword) {
                     var token = jwt.sign(user, JWTKEY, {
                         expiresIn: 900 //The token expries in 15 minutes
@@ -154,29 +154,26 @@ app.post('/login', function(req, res){
                             .where('users.SupporterId', req.session.user.UserId)
                             .andWhereBetween('activity.ActivityDateTime', [new Date() - 1, new Date()])
                             .then(function (activities) {
-                                console.log('came in');
-                                res.json({error: false, token: token, data: {activities: activities}});
+                                res.send({error: false, token: token, data: {activities: activities}});
                             })
                             .catch(function (err) {
-                                res.json({error: true, data: {message: err.message}});
+                                res.send({error: true, data: {message: err.message}});
                             })
                     }
                     else {
-                        res.json({
+                        res.send({
                             error: true,
                             data: {message: 'Oops! Only supporters can login using the web portal!'}
                         });
                     }
                 // }
                 // else {
-                //     if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-                //
-                //     }
+                //     res.send({error: true, data: {message: 'Invalid Password'}});
                 // }
             }
         })
         .catch(function (err) {
-            res.json({error: true, data: {message: err.message}});
+            res.send({error: true, data: {message: err.message}});
         });
 });
 
@@ -190,16 +187,8 @@ var sha512 = function(password, salt){
     var hash = crypto.createHmac('sha512', salt);
     hash.update(password);
     var value = hash.digest('hex');
-    return {
-        salt:salt,
-        passwordHash:value
-    };
+    return value;
 };
-
-function saltHashPassword(userpassword) {
-    var salt = genRandomString(16);
-    var passwordData = sha512(userpassword, salt);
-}
 
 
 app.post('/getNewsFeed', function (req, res) {
@@ -208,12 +197,10 @@ app.post('/getNewsFeed', function (req, res) {
             .where('users.SupporterId', req.session.user.UserId)
             .andWhereBetween('activity.ActivityDateTime', [new Date() - 1, new Date()])
             .then(function (activities) {
-                //res.render('pages/newsfeed', {error: false, data :{activities: activities}});
-                res.json({error: false, data :{activities: activities}});
+                res.send({error: false, data :{activities: activities}});
             })
             .catch( function (err) {
-                //res.render('pages/newsfeed', {error: true, data :{message: err.message}});
-                res.json({error: true, data :{message: err.message}});
+                res.send({error: true, data :{message: err.message}});
             })
     } else {
         res.render('pages/login');
@@ -229,16 +216,25 @@ app.post('/signin', function(req, res){
             if (!user) {
                 res.status(401).json({error: true, data: {message: "Invalid user credentials"}});
             }else {
-                var token = jwt.sign(user, JWTKEY, {
-                    expiresIn: 900 //The token expries in 15 minutes
-                });
-                if(user.attributes.Role == 'Participant') {
-                    req.session.user = user.attributes;
-                    res.status(200).json({error: false, data: {token: token}});
-                }
-                else {
-                    res.json(401).json({error: true, data: {message: 'Oops! Only participants can login using the mobile application!'}});
-                }
+                // var userPassword = sha512(password, user.attributes.Salt);
+                // if (userPassword == user.attributes.HashedPassword) {
+                    var token = jwt.sign(user, JWTKEY, {
+                        expiresIn: 900 //The token expries in 15 minutes
+                    });
+                    if (user.attributes.Role == 'Participant') {
+                        req.session.user = user.attributes;
+                        res.status(200).json({error: false, data: {token: token}});
+                    }
+                    else {
+                        res.json(401).json({
+                            error: true,
+                            data: {message: 'Oops! Only participants can login using the mobile application!'}
+                        });
+                    }
+                // }
+                // else {
+                //     res.send({error: true, data: {message: 'Invalid Password'}});
+                // }
             }
         })
         .catch(function (err) {
@@ -257,6 +253,7 @@ app.post('/postDailyLog', function (req, res) {
                 UserId: req.session.user.UserId,
                 Time: data[i].time,
                 FoodOrDrinkConsumed: data[i].consumed,
+                FVNumberOfServings: data[i].servings,
                 Binge: data[i].binge,
                 VomitingOrLaxative: data[i].vl,
                 ContextOrSetting: data[i].cs,
@@ -416,13 +413,18 @@ app.post('/getWeeklyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
         var Id = '';
+        var week = [];
         if(req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
             Id = req.body.userId;
+            week.push(req.body.week);
         } else {
             Id = req.session.user.UserId;
+            for(var i = 1; i < 9; i++) {
+                week.push(i);
+            }
         }
         knex('weeklysummarysheet')
-            .where('Week', req.body.week)
+            .whereIn('Week', week)
             .andWhere('UserId', Id)
             .then(function (weeklyLog) {
                 if (req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
@@ -706,22 +708,78 @@ app.post('/getChallenge', function (req, res) {
 
 cron.schedule('0 8 * * *', function(){
     var tomorrow = new Date() + 1;
-    knex('appointments').innerJoin('users', 'appointments.UserId', 'user.UserId')
-        .whereBetween('AppointmentTime', tomorrow , tomorrow + 1)
+    knex('appointments').innerJoin('users', 'appointments.UserId', 'users.UserId')
+        .whereBetween('AppointmentTime', [tomorrow , tomorrow + 1])
         .then( function (appointmentUsers) {
             //push for these users
             console.log('push notification');
         })
+        .catch( function (err) {
+            //catch error
+        })
 });
 
+cron.schedule('*/15 * * * *', function () {
+    var time = new Date(new Date().getTime() + 45*60000);
+    var endTime = new Date(new Date().getTime() + 60*60000);
+    knex('appointments').innerJoin('users', 'appointments.UserId', 'users.UserId')
+        .whereBetween('AppointmentTime', [time, endTime])
+        .then( function (appointmentUsers) {
+            //push for these users
+            console.log('push notification');
+        })
+        .catch( function(err) {
+            //catch error
+        });
+});
+
+var getSupporterId = function(supporterEmail){
+    knex.from('users')
+        .where('SupporterId', supporterEmail)
+        .then( function (supporters) {
+            return supporters[0].UserId;
+        })
+        .catch( function (err) {
+            return err;
+        })
+};
+
 app.post('/createUser', function (req, res) {
-    var decoded = jwt.verify(req.body.token, JWTKEY);
-    if(decoded) {
-
-    }
-    else {
-
-    }
+    //var decoded = jwt.verify(req.body.token, JWTKEY);
+    //if(decoded) {
+        var supporterId = '';
+        if(req.body.role == 'Supporter') {
+            supporterId = req.body.supporterEmail;
+        }
+        else {
+            console.log(getSupporterId(req.body.supporterEmail));
+            supporterId = getSupporterId(req.body.supporterEmail);
+        }
+    console.log(supporterId);
+        var salt = genRandomString(16);
+        knex('users')
+            .insert({
+                UserId: uuid.v1(),
+                Username: req.body.username,
+                HashedPassword: sha512(req.body.password, salt),
+                Salt: salt,
+                Role: req.body.role,
+                Level: req.body.level,
+                SupporterId: supporterId,
+                Score: req.body.score,
+                Messages: req.body.onMessages,
+                ImageTagging: req.body.onImageTagging
+            })
+            .then( function (count) {
+                res.status(200).json({error: false, data: {usersCreated: count}});
+            })
+            .catch( function (err) {
+                res.status(500).json({error: true, data: {message: err.message}});
+            });
+    // }
+    // else {
+    //     res.status(401).json({error: true, data: {message: 'Invalid Credentials'}});
+    // }
 });
 
 app.listen(8080,function(){
