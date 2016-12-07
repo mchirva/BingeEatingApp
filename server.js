@@ -18,17 +18,17 @@ var push = require('./modelObject');
 var crypto = require('crypto');
 var cron = require('node-cron');
 var cors = require('cors');
-var apn = require('apn');
-
-var options = {
-    cert: 'keys/binge-certificate.pem',
-    key: 'keys/key.pem',
-    passphrase: 'bazzinga',
-    production: false,
-    connectionTimeout: 10000
-};
-
-var apnProvider = new apn.Provider(options);
+// var apn = require('apn');
+//
+// var options = {
+//     cert: 'keys/binge-certificate.pem',
+//     key: 'keys/key.pem',
+//     passphrase: 'bazzinga',
+//     production: false,
+//     connectionTimeout: 10000
+// };
+//
+// var apnProvider = new apn.Provider(options);
 
 var app = express();
 
@@ -98,31 +98,31 @@ app.use(function (req, res, next) {
     next();
 });
 
-function sendPushForDevice(withToken, pushMessage, callback){
-    //Sending push...
-    var note = new apn.Notification();
-
-    note.expiry = pushMessage.expiry;
-    note.badge = pushMessage.badge;
-    note.sound = pushMessage.sound;
-    note.alert = pushMessage.alert;
-    note.payload = pushMessage.payload;
-
-    apnProvider.send(note, withToken)
-        .then(function (result) {
-            console.log(result)
-        });
-    callback();
-    //Push ends here ...
-}
+// function sendPushForDevice(withToken, pushMessage, callback){
+//     //Sending push...
+//     var note = new apn.Notification();
 //
-app.post('/push', function(req, res){
-    var alertMessage = {'message': 'You have an appointment coming up at '};
-    var pushMessage = new push.PushMessage(alertMessage);
-    sendPushForDevice('7B77DF4540BAAAB8F96B2C64250F7ADE25A5509E0762482BA7B235A03FF787F4', pushMessage, function() {
-        res.json({error: false, data: {message: 'Push sent!'}});
-    });
-});
+//     note.expiry = pushMessage.expiry;
+//     note.badge = pushMessage.badge;
+//     note.sound = pushMessage.sound;
+//     note.alert = pushMessage.alert;
+//     note.payload = pushMessage.payload;
+//
+//     apnProvider.send(note, withToken)
+//         .then(function (result) {
+//             console.log(result)
+//         });
+//     callback();
+//     //Push ends here ...
+// }
+// //
+// app.post('/push', function(req, res){
+//     var alertMessage = {'message': 'You have an appointment coming up at '};
+//     var pushMessage = new push.PushMessage(alertMessage);
+//     sendPushForDevice('7B77DF4540BAAAB8F96B2C64250F7ADE25A5509E0762482BA7B235A03FF787F4', pushMessage, function() {
+//         res.json({error: false, data: {message: 'Push sent!'}});
+//     });
+// });
 
 app.post('/login', function(req, res){
     var username = req.body.username;
