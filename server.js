@@ -14,20 +14,21 @@ var Bookshelf = require('bookshelf')(knex);
 var uuid = require('uuid');
 var bodyParser = require('body-parser');
 var jwt    = require('jsonwebtoken');
-//var push = require('./modelObject');
+var push = require('./modelObject');
 var crypto = require('crypto');
 var cron = require('node-cron');
 var cors = require('cors');
+var apn = require('apn');
 
 var options = {
-    cert: 'keys/cert.pem',
+    cert: 'keys/binge-certificate.pem',
     key: 'keys/key.pem',
     passphrase: 'bazzinga',
     production: false,
     connectionTimeout: 10000
 };
 
-//var apnConnection = new apn.Connection(options);
+var apnProvider = new apn.Provider(options);
 
 var app = express();
 
@@ -78,7 +79,7 @@ var Appointments = Bookshelf.Model.extend({
 });
 
 app.get('/', function(req, res) {
-   res.render('pages/login');
+   res.sendFile(__dirname + '/views/pages/home.html');
 });
 
 app.use(function (req, res, next) {
@@ -97,42 +98,29 @@ app.use(function (req, res, next) {
     next();
 });
 
-// function sendPushForDevice(withToken, pushMessage, callback){
-//     //Sending push...
-//     //var myDevice = new apn.Device(withToken);
-//     var myDevice = "";
-//     var note = new apn.Notification();
+function sendPushForDevice(withToken, pushMessage, callback){
+    //Sending push...
+    var note = new apn.Notification();
+
+    note.expiry = pushMessage.expiry;
+    note.badge = pushMessage.badge;
+    note.sound = pushMessage.sound;
+    note.alert = pushMessage.alert;
+    note.payload = pushMessage.payload;
+
+    apnProvider.send(note, withToken)
+        .then((result => console.log(result)));
+    callback();
+    //Push ends here ...
+}
 //
-//     note.expiry = pushMessage.expiry;
-//     note.badge = pushMessage.badge;
-//     note.sound = pushMessage.sound;
-//     note.alert = pushMessage.alert;
-//     note.payload = pushMessage.payload;
-//
-//     apnConnection.pushNotification(note, myDevice);
-//     callback();
-//     //Push ends here ...
-// }
-//
-// app.post('/push', function(req, res){
-//     var token = req.body.dToken;
-//     if(!token){
-//         res.json({error: true, data: {message: 'Push failed!'}});
-//     }else {
-//         Discount.forge({region: placesByBeacons["15212:31506"]})
-//             .fetch()
-//             .then(function (discount) {
-//                 var alertMessage = discount.get('discount') + ' % discount on ' + discount.get('product_name');
-//                 var pushMessage = new push.PushMessage(alertMessage, discount.toJSON());
-//                 sendPushForDevice(token, pushMessage, function() {
-//                     res.json({error: false, data: {message: 'Push sent!'}});
-//                 });
-//             })
-//             .catch(function (err){
-//                 res.status(500).json({error: true, data: {message: err.message}});
-//             })
-//     }
-// });
+app.post('/push', function(req, res){
+    var alertMessage = {'message': 'You have an appointment coming up at '};
+    var pushMessage = new push.PushMessage(alertMessage);
+    sendPushForDevice('7B77DF4540BAAAB8F96B2C64250F7ADE25A5509E0762482BA7B235A03FF787F4', pushMessage, function() {
+        res.json({error: false, data: {message: 'Push sent!'}});
+    });
+});
 
 app.post('/login', function(req, res){
     var username = req.body.username;
@@ -192,7 +180,11 @@ var sha512 = function(password, salt){
 
 
 app.post('/getNewsFeed', function (req, res) {
-    if(jwt.verify(req.body.token, JWTKEY)) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
             knex('activity').innerJoin('users', 'activity.UserId', 'users.UserId')
                 .where('users.SupporterId', req.session.user.UserId)
@@ -333,6 +325,9 @@ app.post('/postPhysicalDailyLog', function (req, res) {
 app.post('/getDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         var Id = '';
         if(req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
             Id = req.body.userId;
@@ -419,6 +414,9 @@ app.post('/getWeeklyLog', function (req, res) {
     if(decoded) {
         var Id = '';
         var week = [];
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         if(req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
             Id = req.body.userId;
             week.push(req.body.week);
@@ -521,6 +519,9 @@ app.post('/addNotes', function (req, res) {
 app.post('/viewNotes', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         var userId = '';
         var supporter = '';
         var isVisible = [];
@@ -579,6 +580,9 @@ app.post('/getMotivationalMessage', function (req, res) {
 app.post('/setAppointment', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         Appointments.forge({
             AppointmentId: uuid.v1(),
             UserId: req.body.userId,
@@ -600,6 +604,9 @@ app.post('/setAppointment', function (req, res) {
 app.post('/getOccupiedTimes', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         var startTime = req.body.date + ' 00:00:00';
         var endTime = req.body.date + ' 23:59:59';
         knex.from('appointments')
@@ -621,6 +628,9 @@ app.post('/getMyAppointments', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
         var id = '';
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
             id = req.body.userId;
         }
@@ -649,6 +659,9 @@ app.post('/getMyAppointments', function (req, res) {
 app.post('/setProgress', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         knex('users')
             .where('UserId', req.body.userId)
             .andWhere('Role', 'Participant')
@@ -668,6 +681,9 @@ app.post('/getProgress', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
         var Id = '';
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
             Id = req.body.userId;
         }
@@ -698,6 +714,9 @@ app.post('/getProgress', function (req, res) {
 app.post('/getChallenge', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         var challengeId = Math.floor(Math.random() * (21 - 1)) + 1;
         knex('challenges')
             .where('ChallengeId', challengeId)
@@ -712,15 +731,22 @@ app.post('/getChallenge', function (req, res) {
 
 cron.schedule('0 8 * * *', function(){
     var tomorrow = new Date() + 1;
-    knex('appointments').innerJoin('users', 'appointments.UserId', 'users.UserId')
-        .whereBetween('AppointmentTime', [tomorrow , tomorrow + 1])
-        .then( function (appointmentUsers) {
-            //push for these users
-            console.log('push notification');
-        })
-        .catch( function (err) {
-            //catch error
-        })
+    // knex('appointments').innerJoin('users', 'appointments.UserId', 'users.UserId')
+    //     .whereBetween('AppointmentTime', [tomorrow , tomorrow + 1])
+    //     .then( function (appointmentUsers) {
+    //         //push for these users
+    //         for (var user in appointmentUsers) {
+    //             var alertMessage = 'You have an appointment coming up at ' + user.AppointmentTime;
+                var pushMessage = new push.PushMessage(alertMessage);
+                sendPushForDevice(user.DeviceId, pushMessage, function() {
+                    res.json({error: false, data: {message: 'Push sent!'}});
+                });
+            //}
+        //     console.log('push notification');
+        // })
+        // .catch( function (err) {
+        //     //catch error
+        // })
 });
 
 cron.schedule('*/15 * * * *', function () {
@@ -749,6 +775,9 @@ var getSupporterId = function(supporterEmail){
 };
 
 app.get('/logout', function (req, res){
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
         req.session.destroy();
         //remove deviceID
 });
