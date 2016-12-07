@@ -109,7 +109,9 @@ function sendPushForDevice(withToken, pushMessage, callback){
     note.payload = pushMessage.payload;
 
     apnProvider.send(note, withToken)
-        .then((result => console.log(result)));
+        .then(function (result) {
+            console.log(result)
+        });
     callback();
     //Push ends here ...
 }
