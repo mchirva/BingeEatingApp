@@ -144,7 +144,7 @@ app.post('/login', function(req, res){
                             .where('users.SupporterId', req.session.user.UserId)
                             .andWhereBetween('activity.ActivityDateTime', [new Date() - 1, new Date()])
                             .then(function (activities) {
-                                res.send({error: false, token: token, data: {activities: activities}});
+                                res.send({error: false, token: token, data: {activities: activities, role: req.session.user.Role}});
                             })
                             .catch(function (err) {
                                 res.send({error: true, data: {message: err.message}});
@@ -263,7 +263,7 @@ app.post('/postDailyLog', function (req, res) {
                 ContextOrSetting: req.body.cs,
                 Feelings: req.body.feelings
             })
-            .then(function (count) {
+            .then(function (dailyLogs) {
                 knex('activity')
                     .insert({
                         Id: uuid.v1(),
@@ -310,7 +310,7 @@ app.post('/postPhysicalDailyLog', function (req, res) {
                         Activity: 'Daily Physical Log',
                         ActivityDateTime: new Date()
                     })
-                    .then( function (count) {
+                    .then( function (dailyLogs) {
                         res.status(200).json({error: false, data: {logs: dailyLogs}});
                     })
                     .catch( function (err) {
@@ -344,7 +344,7 @@ app.post('/getDailyLog', function (req, res) {
             .whereBetween('Time', [startTime, endTime])
             .andWhere('UserId', Id)
             .then(function(dailyLogs) {
-                if(req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
+                if(req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
                     res.send({error: false, data: {dailyLogs: dailyLogs}});
                 }
                 else {
@@ -379,7 +379,7 @@ app.post('/getPhysicalDailyLog', function (req, res) {
             .whereBetween('Time', [startTime, endTime])
             .andWhere('UserId', Id)
             .then(function(dailyLogs) {
-                if(req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
+                if(req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
                     res.send({error: false, data: {dailyLogs: dailyLogs}});
                 }
                 else {
@@ -468,7 +468,7 @@ app.post('/getWeeklyLog', function (req, res) {
             .whereIn('Week', week)
             .andWhere('UserId', Id)
             .then(function (weeklyLog) {
-                if (req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
+                if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
                     res.send({error: false, data: {weeklyLog: weeklyLog}});
                 }
                 else {
@@ -813,11 +813,14 @@ var getSupporterId = function(supporterEmail){
 };
 
 app.get('/logout', function (req, res){
-        if(!req.session.user) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        if (!req.session.user) {
             req.session.user = decoded.attributes;
         }
         req.session.destroy();
         //remove deviceID
+    }
 });
 
 app.post('/createUser', function (req, res) {
