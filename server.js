@@ -244,13 +244,13 @@ app.post('/signin', function(req, res){
 
 app.post('/postDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
-    var LogId = '';
-    if (req.body.logId == '') {
-        LogId = uuid.v1();
-    } else {
-        LogId = req.body.logId;
-    }
     if(decoded) {
+        var LogId = '';
+        if (req.body.logId == '') {
+            LogId = uuid.v1();
+        } else {
+            LogId = req.body.logId;
+        }
         knex('dailysummarysheet')
             .insert({
                 LogId: LogId,
@@ -341,6 +341,41 @@ app.post('/getDailyLog', function (req, res) {
         var startTime = req.body.date + ' 00:00:00';
         var endTime = req.body.date + ' 23:59:59';
         knex.from('dailysummarysheet')
+            .whereBetween('Time', [startTime, endTime])
+            .andWhere('UserId', Id)
+            .then(function(dailyLogs) {
+                if(req.session.Role == 'Supporter' || req.session.Role == 'Admin') {
+                    res.send({error: false, data: {dailyLogs: dailyLogs}});
+                }
+                else {
+                    res.status(200).json({error: false, data: {dailyLogs: dailyLogs}});
+                }
+
+            })
+            .catch(function (err){
+                res.status(500).send({error: true, data: {message: err.message}});
+            })
+    }else {
+        res.status(401).send({error: true, data: {message: 'invalid token'}});
+    }
+});
+
+app.post('/getPhysicalDailyLog', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        if(!req.session.user) {
+            req.session.user = decoded.attributes;
+        }
+        var Id = '';
+        if(req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
+            Id = req.body.userId;
+        }
+        else {
+            Id = req.session.user.UserId;
+        }
+        var startTime = req.body.date + ' 00:00:00';
+        var endTime = req.body.date + ' 23:59:59';
+        knex.from('physicaldailysummary')
             .whereBetween('Time', [startTime, endTime])
             .andWhere('UserId', Id)
             .then(function(dailyLogs) {
