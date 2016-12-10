@@ -248,39 +248,70 @@ app.post('/postDailyLog', function (req, res) {
         var LogId = '';
         if (req.body.logId == '') {
             LogId = uuid.v1();
+            knex('dailysummarysheet')
+                .insert({
+                    LogId: LogId,
+                    UserId: req.session.user.UserId,
+                    Time: req.body.time,
+                    FoodOrDrinkConsumed: req.body.consumed,
+                    FVNumberOfServings: req.body.servings,
+                    Binge: req.body.binge,
+                    VomitingOrLaxative: req.body.vl,
+                    ContextOrSetting: req.body.cs,
+                    Feelings: req.body.feelings
+                })
+                .then(function (dailyLogs) {
+                    knex('activity')
+                        .insert({
+                            Id: uuid.v1(),
+                            UserId: req.session.user.UserId,
+                            Activity: 'Daily Log',
+                            ActivityDateTime: new Date()
+                        })
+                        .then(function (count) {
+                            res.status(200).json({error: false, data: {logs: dailyLogs}});
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({error: true, data: {message: err.message}});
+                        });
+                })
+                .catch(function (err) {
+                    res.status(500).json({error: true, data: {message: err.message}});
+                });
         } else {
             LogId = req.body.logId;
+            knex('dailysummarysheet')
+                .where('LogId', LogId)
+                .update({
+                    UserId: req.session.user.UserId,
+                    Time: req.body.time,
+                    FoodOrDrinkConsumed: req.body.consumed,
+                    FVNumberOfServings: req.body.servings,
+                    Binge: req.body.binge,
+                    VomitingOrLaxative: req.body.vl,
+                    ContextOrSetting: req.body.cs,
+                    Feelings: req.body.feelings
+                })
+                .then(function (dailyLogs) {
+                    knex('activity')
+                        .insert({
+                            Id: uuid.v1(),
+                            UserId: req.session.user.UserId,
+                            Activity: 'Daily Log',
+                            ActivityDateTime: new Date()
+                        })
+                        .then(function (count) {
+                            res.status(200).json({error: false, data: {logs: dailyLogs}});
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({error: true, data: {message: err.message}});
+                        });
+                })
+                .catch(function (err) {
+                    res.status(500).json({error: true, data: {message: err.message}});
+                });
         }
-        knex('dailysummarysheet')
-            .insert({
-                LogId: LogId,
-                UserId: req.session.user.UserId,
-                Time: req.body.time,
-                FoodOrDrinkConsumed: req.body.consumed,
-                FVNumberOfServings: req.body.servings,
-                Binge: req.body.binge,
-                VomitingOrLaxative: req.body.vl,
-                ContextOrSetting: req.body.cs,
-                Feelings: req.body.feelings
-            })
-            .then(function (dailyLogs) {
-                knex('activity')
-                    .insert({
-                        Id: uuid.v1(),
-                        UserId: req.session.user.UserId,
-                        Activity: 'Daily Log',
-                        ActivityDateTime: new Date()
-                    })
-                    .then(function (count) {
-                        res.status(200).json({error: false, data: {logs: dailyLogs}});
-                    })
-                    .catch(function (err) {
-                        res.status(500).json({error: true, data: {message: err.message}});
-                    });
-            })
-            .catch(function (err) {
-                res.status(500).json({error: true, data: {message: err.message}});
-            });
+
     }else {
         res.status(401).json({error: true, data: {message: 'invalid token'}});
     }
@@ -812,7 +843,7 @@ var getSupporterId = function(supporterEmail){
         })
 };
 
-app.get('/logout', function (req, res){
+app.post('/logout', function (req, res){
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
         if (!req.session.user) {
