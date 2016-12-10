@@ -244,25 +244,20 @@ app.post('/signin', function(req, res){
 
 app.post('/postDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
-    if(decoded){
-        var dailyLogs = [];
-        var data = JSON.parse(req.body.data);
-        for (var i = 0; i < data.length; i++) {
-            dailyLogs.push({
+    if(decoded) {
+        knex('dailysummarysheet')
+            .insert({
                 LogId: uuid.v1(),
                 UserId: req.session.user.UserId,
-                Time: data[i].time,
-                FoodOrDrinkConsumed: data[i].consumed,
-                FVNumberOfServings: data[i].servings,
-                Binge: data[i].binge,
-                VomitingOrLaxative: data[i].vl,
-                ContextOrSetting: data[i].cs,
-                Feelings: data[i].feelings
-            });
-        }
-        knex('dailysummarysheet')
-            .insert(dailyLogs)
-            .then( function (count) {
+                Time: data.time,
+                FoodOrDrinkConsumed: data.consumed,
+                FVNumberOfServings: data.servings,
+                Binge: data.binge,
+                VomitingOrLaxative: data.vl,
+                ContextOrSetting: data.cs,
+                Feelings: data.feelings
+            })
+            .then(function (count) {
                 knex('activity')
                     .insert({
                         Id: uuid.v1(),
@@ -270,14 +265,14 @@ app.post('/postDailyLog', function (req, res) {
                         Activity: 'Daily Log',
                         ActivityDateTime: new Date()
                     })
-                    .then( function (count) {
+                    .then(function (count) {
                         res.status(200).json({error: false, data: {logs: dailyLogs}});
                     })
-                    .catch( function (err) {
+                    .catch(function (err) {
                         res.status(500).json({error: true, data: {message: err.message}});
                     });
             })
-            .catch( function (err) {
+            .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
             });
     }else {
@@ -787,12 +782,14 @@ app.get('/logout', function (req, res){
 app.post('/createUser', function (req, res) {
     //var decoded = jwt.verify(req.body.token, JWTKEY);
     //if(decoded) {
+    console.log(req.body.supporterEmail);
         var supporterId = '';
         if(req.body.role == 'Supporter') {
             supporterId = req.body.supporterEmail;
         }
         else {
             supporterId = getSupporterId(req.body.supporterEmail);
+            console.log(supporterId);
         }
         var salt = genRandomString(16);
         knex('users')
