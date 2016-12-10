@@ -244,18 +244,24 @@ app.post('/signin', function(req, res){
 
 app.post('/postDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
+    var LogId = '';
+    if (req.body.logId == '') {
+        LogId = uuid.v1();
+    } else {
+        LogId = req.body.logId;
+    }
     if(decoded) {
         knex('dailysummarysheet')
             .insert({
-                LogId: uuid.v1(),
+                LogId: LogId,
                 UserId: req.session.user.UserId,
-                Time: data.time,
-                FoodOrDrinkConsumed: data.consumed,
-                FVNumberOfServings: data.servings,
-                Binge: data.binge,
-                VomitingOrLaxative: data.vl,
-                ContextOrSetting: data.cs,
-                Feelings: data.feelings
+                Time: req.body.time,
+                FoodOrDrinkConsumed: req.body.consumed,
+                FVNumberOfServings: req.body.servings,
+                Binge: req.body.binge,
+                VomitingOrLaxative: req.body.vl,
+                ContextOrSetting: req.body.cs,
+                Feelings: req.body.feelings
             })
             .then(function (count) {
                 knex('activity')
