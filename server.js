@@ -319,38 +319,66 @@ app.post('/postDailyLog', function (req, res) {
 
 app.post('/postPhysicalDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
-    if(decoded){
-        var dailyLogs = [];
-        var data = JSON.parse(req.body.data);
-        for (var i = 0; i < data.length; i++) {
-            dailyLogs.push({
-                LogId: uuid.v1(),
-                UserId: req.session.user.UserId,
-                Time: data[i].time,
-                PhysicalActivity: data[i].workout,
-                MinutesPerformed: data[i].minutes
-            });
+    if(decoded) {
+        var LogId = '';
+        if (req.body.logId == '') {
+            LogId = uuid.v1();
+            knex('physicaldailysummary')
+                .insert({
+                    LogId: uuid.v1(),
+                    UserId: req.session.user.UserId,
+                    Time: req.body.time,
+                    PhysicalActivity: req.body.workout,
+                    MinutesPerformed: req.body.minutes
+                })
+                .then(function (dailyLogs) {
+                    knex('activity')
+                        .insert({
+                            Id: uuid.v1(),
+                            UserId: req.session.user.UserId,
+                            Activity: 'Physical Daily Log',
+                            ActivityDateTime: new Date()
+                        })
+                        .then(function (count) {
+                            res.status(200).json({error: false, data: {logs: dailyLogs}});
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({error: true, data: {message: err.message}});
+                        });
+                })
+                .catch(function (err) {
+                    res.status(500).json({error: true, data: {message: err.message}});
+                });
+        } else {
+            LogId = req.body.logId;
+            knex('physicaldailysummary')
+                .where('LogId', LogId)
+                .update({
+                    UserId: req.session.user.UserId,
+                    Time: req.body.time,
+                    PhysicalActivity: req.body.workout,
+                    MinutesPerformed: req.body.minutes
+                })
+                .then(function (dailyLogs) {
+                    knex('activity')
+                        .insert({
+                            Id: uuid.v1(),
+                            UserId: req.session.user.UserId,
+                            Activity: 'Daily Log',
+                            ActivityDateTime: new Date()
+                        })
+                        .then(function (count) {
+                            res.status(200).json({error: false, data: {logs: dailyLogs}});
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({error: true, data: {message: err.message}});
+                        });
+                })
+                .catch(function (err) {
+                    res.status(500).json({error: true, data: {message: err.message}});
+                });
         }
-        knex('physicaldailysummary')
-            .insert(dailyLogs)
-            .then( function (count) {
-                knex('activity')
-                    .insert({
-                        Id: uuid.v1(),
-                        UserId: req.session.user.UserId,
-                        Activity: 'Daily Physical Log',
-                        ActivityDateTime: new Date()
-                    })
-                    .then( function (dailyLogs) {
-                        res.status(200).json({error: false, data: {logs: dailyLogs}});
-                    })
-                    .catch( function (err) {
-                        res.status(500).json({error: true, data: {message: err.message}});
-                    });
-            })
-            .catch( function (err) {
-                res.status(500).json({error: true, data: {message: err.message}});
-            });
+
     }else {
         res.status(401).json({error: true, data: {message: 'invalid token'}});
     }
@@ -833,14 +861,7 @@ cron.schedule('*/15 * * * *', function () {
 });
 
 var getSupporterId = function(supporterEmail){
-    knex.from('users')
-        .where('SupporterId', supporterEmail)
-        .then( function (supporters) {
-            return supporters[0].UserId;
-        })
-        .catch( function (err) {
-            return err;
-        })
+
 };
 
 app.post('/logout', function (req, res){
@@ -854,42 +875,89 @@ app.post('/logout', function (req, res){
     }
 });
 
-app.post('/createUser', function (req, res) {
-    //var decoded = jwt.verify(req.body.token, JWTKEY);
-    //if(decoded) {
-    console.log(req.body.supporterEmail);
-        var supporterId = '';
-        if(req.body.role == 'Supporter') {
-            supporterId = req.body.supporterEmail;
-        }
-        else {
-            supporterId = getSupporterId(req.body.supporterEmail);
-            console.log(supporterId);
-        }
-        var salt = genRandomString(16);
+app.post('/getUsers', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
         knex('users')
-            .insert({
-                UserId: uuid.v1(),
-                Username: req.body.username,
-                HashedPassword: sha512(req.body.password, salt),
-                Salt: salt,
-                Role: req.body.role,
-                Level: req.body.level,
-                SupporterId: supporterId,
-                Score: req.body.score,
-                Messages: req.body.onMessages,
-                ImageTagging: req.body.onImageTagging
-            })
-            .then( function (count) {
-                res.status(200).json({error: false, data: {usersCreated: count}});
+            .then(function (users) {
+                res.send({error: false, data: {users: users}});
             })
             .catch( function (err) {
-                res.status(500).json({error: true, data: {message: err.message}});
+                res.send({error: true, data: {message: err.message}});
             });
-    // }
-    // else {
-    //     res.status(401).json({error: true, data: {message: 'Invalid Credentials'}});
-    // }
+    }
+    else {
+        res.send({error: true, data: {message: 'Invalid token'}});
+    }
+});
+
+app.post('/editUser', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('users')
+            .where('UserId', req.body.userId)
+            .update({
+                Username: req.body.username,
+                Password: req.body.password,
+                Level: req.body.level,
+                SupporterId: req.body.supporterId,
+                Messages: req.body.messages,
+                ImageTagging: req.body.imageTagging
+            })
+            .then (function (count) {
+                res.send({error: false, data: {user: count}});
+            })
+            .catch (function (err) {
+                res.send({error: true, data: {message: err.message}});
+            })
+    } else{
+        res.status(401).json({error: true, data: {message: 'Invalid Token'}});
+    }
+});
+
+app.post('/deleteUser', function (req, res){
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('users')
+            .where('UserId', req.body.userId)
+            .del()
+            .then (function (count) {
+               res.send({error: false, data: {deleted: success}});
+            })
+            .catch( function (err) {
+                res.send({error: true, data: {message: err.message}});
+            });
+    } else {
+        res.status(401).json({error: true, data: {message: 'Invalid Token'}});
+    }
+});
+
+app.post('/createUser', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        var messages = 0;
+        var images = 0;
+        if(req.body.role == 'Participant') {
+            messages = 0;
+            images = 0;
+        } else {
+            messages = req.body.messages;
+            images = req.body.images;
+        }
+        knex
+            .raw('call createUser(?,?,?,?,?,?)', [req.body.username, req.body.password, req.body.role, req.body.supporterId, messages, images])
+            .then( function (response) {
+                res.send({error: false, data: {response: response}});
+            })
+            .catch (function (err) {
+                res.send({error: false, data: {message: err.message}});
+            });
+        //var salt = genRandomString(16);
+
+    }
+    else {
+        res.status(401).json({error: true, data: {message: 'Invalid Token'}});
+    }
 });
 
 app.listen(8080,function(){
