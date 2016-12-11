@@ -924,9 +924,6 @@ app.post('/createUser', function (req, res) {
         var messages = 0;
         var images = 0;
         if(req.body.role == 'Participant') {
-            messages = 0;
-            images = 0;
-        } else {
             messages = req.body.messages;
             images = req.body.images;
         }
