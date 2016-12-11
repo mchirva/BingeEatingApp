@@ -20,6 +20,8 @@ var Schema = {
     VomitingOrLaxative: {type: 'integer', nullable: false},
     ContextOrSetting: {type: 'string', maxlength: 50, nullable: false},
     Feelings: {type: 'string', maxlength: 500, nullable: false},
+    ImageId: {type: 'string', maxlength: 254, nullable: true},
+    ImageTag: {type: 'string', maxlength: 2000, nullable: true}
   },
   physicaldailysummary: {
     LogId: {type: 'string', maxlength: 254, nullable: false, primary: true},
@@ -50,6 +52,18 @@ var Schema = {
     Username: {type: 'string', maxlength: 50, nullable: false},
     SupporterId: {type: 'string', maxlength: 254, nullable: false},
     AppontmentTime: {type: 'datetime', nullable: false}
+  },
+  tags: {
+    TagId: {type: 'string', maxlength: 254, nullable: false, primary: true},
+    Tag: {type: 'string', maxlength: 50, nullable: false}
+  },
+  images: {
+    ImageId: {type: 'string', maxlength: 254, nullable: false, primary: true},
+    ImageUrl: {type: 'string', maxlength: 2000, nullable: false}
+  },
+  imagetags: {
+    ImageId: {type: 'string', maxlength: 254, nullable: false},
+    TagId: {type: 'string', maxlength: 254, nullable: false}
   }
 };
 module.exports = Schema;

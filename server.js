@@ -180,7 +180,39 @@ var sha512 = function(password, salt){
     return value;
 };
 
+app.post('/tagFood', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('imagetags')
+            .insert({
+                ImageId: req.body.ImageId,
+                TagId: req.body.TagId
+            })
+            .then( function (response) {
+                res.json({error: false, data:{response: response}});
+            })
+            .catch(function (err) {
+                res.json({error: true, data: {message: err.message}});
+            })
+    } else {
+        res.json({error: true, data: {message: 'Invalid token'}});
+    }
+});
 
+app.post('/getTags', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('tags')
+            .then(function (tags) {
+                res.json({error: false, data: {tags: tags}});
+            })
+            .catch(function (err) {
+                res.json({error: true, data: {message: err.message}});
+            });
+    } else {
+        res.send({error: true, data: {message: 'Invalid token'}});
+    }
+});
 app.post('/getNewsFeed', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
@@ -245,73 +277,27 @@ app.post('/signin', function(req, res){
 app.post('/postDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
-        var LogId = '';
-        if (req.body.logId == '') {
-            LogId = uuid.v1();
-            knex('dailysummarysheet')
-                .insert({
-                    LogId: LogId,
-                    UserId: req.session.user.UserId,
-                    Time: req.body.time,
-                    FoodOrDrinkConsumed: req.body.consumed,
-                    FVNumberOfServings: req.body.servings,
-                    Binge: req.body.binge,
-                    VomitingOrLaxative: req.body.vl,
-                    ContextOrSetting: req.body.cs,
-                    Feelings: req.body.feelings
-                })
-                .then(function (dailyLogs) {
-                    knex('activity')
-                        .insert({
-                            Id: uuid.v1(),
-                            UserId: req.session.user.UserId,
-                            Activity: 'Daily Log',
-                            ActivityDateTime: new Date()
-                        })
-                        .then(function (count) {
-                            res.status(200).json({error: false, data: {logs: dailyLogs}});
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({error: true, data: {message: err.message}});
-                        });
-                })
-                .catch(function (err) {
-                    res.status(500).json({error: true, data: {message: err.message}});
-                });
-        } else {
-            LogId = req.body.logId;
-            knex('dailysummarysheet')
-                .where('LogId', LogId)
-                .update({
-                    UserId: req.session.user.UserId,
-                    Time: req.body.time,
-                    FoodOrDrinkConsumed: req.body.consumed,
-                    FVNumberOfServings: req.body.servings,
-                    Binge: req.body.binge,
-                    VomitingOrLaxative: req.body.vl,
-                    ContextOrSetting: req.body.cs,
-                    Feelings: req.body.feelings
-                })
-                .then(function (dailyLogs) {
-                    knex('activity')
-                        .insert({
-                            Id: uuid.v1(),
-                            UserId: req.session.user.UserId,
-                            Activity: 'Daily Log',
-                            ActivityDateTime: new Date()
-                        })
-                        .then(function (count) {
-                            res.status(200).json({error: false, data: {logs: dailyLogs}});
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({error: true, data: {message: err.message}});
-                        });
-                })
-                .catch(function (err) {
-                    res.status(500).json({error: true, data: {message: err.message}});
-                });
+        var newimage = '';
+        if(req.body.logId != '') {
+            newimage = req.body.newImage;
         }
-
+        knex.raw('call postDailyLog(?,?,?,?,?,?,?,?,?,?,?)',[req.body.logId,
+            req.session.user.UserId,
+            req.body.time,
+            req.body.consumed,
+            req.body.servings,
+            req.body.binge,
+            req.body.vl,
+            req.body.cs,
+            req.body.feelings,
+            req.body.image,
+            newimage])
+            .then(function (response) {
+                res.json({error: false, data: {response: response}});
+            })
+            .catch( function (err) {
+                res.json({error: true, data: {message: err.message}});
+            });
     }else {
         res.status(401).json({error: true, data: {message: 'invalid token'}});
     }
