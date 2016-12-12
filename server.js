@@ -183,12 +183,14 @@ var sha512 = function(password, salt){
 app.post('/tagFood', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
+        console.log('Yay!');
         knex('imagetags')
             .insert({
                 ImageId: req.body.ImageId,
                 TagId: req.body.TagId
             })
             .then( function (response) {
+                console.log('now yayy');
                 res.json({error: false, data:{response: response}});
             })
             .catch(function (err) {
