@@ -601,6 +601,44 @@ app.post('/addNotes', function (req, res) {
     }
 });
 
+app.post('/editNotes', function (req, res){
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        knex('notes')
+            .where('Id', req.body.notesId)
+            .update({
+                Notes: req.body.notes,
+                IsVisible: req.body.isVisible
+            })
+            .then (function (notes) {
+                res.json({error: false, data: {notes: notes}});
+            })
+            .catch(function (err) {
+                res.json({error: true, data: {message: err.message}});
+            });
+    }
+    else {
+        res.status(401).json({error: true, data: {message: 'invalid token'}});
+    }
+});
+
+app.post('/deleteNotes', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        knex('notes')
+            .where('Id', req.body.notesId)
+            .del()
+            .then(function (count) {
+                res.json({error: false, data: {notes: count}});
+            })
+            .catch( function (err) {
+                res.json({error: true, data:{message: err.message}});
+            });
+    } else {
+        res.status(401).json({error: true, data: {message: 'invalid token'}});
+    }
+});
+
 app.post('/viewNotes', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
@@ -910,7 +948,7 @@ app.post('/deleteUser', function (req, res){
             .where('UserId', req.body.userId)
             .del()
             .then (function (count) {
-               res.send({error: false, data: {deleted: success}});
+               res.send({error: false, data: {deleted: count}});
             })
             .catch( function (err) {
                 res.send({error: true, data: {message: err.message}});
