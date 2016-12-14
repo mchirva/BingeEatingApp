@@ -16,6 +16,7 @@ var bodyParser = require('body-parser');
 var jwt    = require('jsonwebtoken');
 var push = require('./modelObject');
 var crypto = require('crypto');
+var aws = require('aws-sdk');
 var cron = require('node-cron');
 var cors = require('cors');
 // var apn = require('apn');
@@ -139,12 +140,21 @@ app.post('/login', function(req, res){
                         expiresIn: 900 //The token expries in 15 minutes
                     });
                     req.session.user = user.attributes;
-                    if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-                        knex('activity').innerJoin('users', 'activity.UserId', 'users.UserId')
+                    if (req.session.user.Role == 'Supporter') {
+                        knex('users')
                             .where('users.SupporterId', req.session.user.UserId)
-                            .andWhereBetween('activity.ActivityDateTime', [new Date() - 1, new Date()])
-                            .then(function (activities) {
-                                res.send({error: false, token: token, data: {activities: activities, role: req.session.user.Role}});
+                            .then(function (users) {
+                                res.send({error: false, token: token, data: {users: users, role: req.session.user.Role}});
+                            })
+                            .catch(function (err) {
+                                res.send({error: true, data: {message: err.message}});
+                            })
+                    }
+                    else if (req.session.user.Role == 'Admin') {
+                        knex('users')
+                            .where('Role', 'Participant')
+                            .then(function (users) {
+                                res.send({error: false, token: token, data: {users: users, role: req.session.user.Role}});
                             })
                             .catch(function (err) {
                                 res.send({error: true, data: {message: err.message}});
@@ -179,6 +189,45 @@ var sha512 = function(password, salt){
     var value = hash.digest('hex');
     return value;
 };
+
+app.post('/getToken', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        var token = jwt.sign({UserId: req.body.userId}, JWTKEY, {
+            expiresIn: 900 //The token expries in 15 minutes
+        });
+        res.send({error: false, data: {token: token}});
+    }
+    else {
+        res.json({error: true, data: {message: 'Invalid token'}});
+    }
+});
+
+app.post('/changePassword', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('users')
+            .where('UserId', decoded.UserId)
+            .update({password: req.body.password, CreateDateTime: new Date()})
+            .then ( function (count) {
+                knex('users')
+                    .where('UserId', decoded.UserId)
+                    .then( function (users) {
+                        var token = jwt.sign(users[0], JWTKEY, {
+                            expiresIn: 7257600 //The token expries in 15 minutes
+                        });
+                        req.session.user = users[0];
+                        res.json({error: false, data: {user: users[0], token: token}});
+                    })
+                    .catch( function (err) {
+                        res.json({error: true, data: {message: err.message}});
+                    });
+            })
+    }
+    else {
+        res.json({error: true, data: {message: 'Invalid token'}});
+    }
+});
 
 app.post('/tagFood', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
@@ -215,31 +264,6 @@ app.post('/getTags', function (req, res) {
         res.send({error: true, data: {message: 'Invalid token'}});
     }
 });
-app.post('/getNewsFeed', function (req, res) {
-    var decoded = jwt.verify(req.body.token, JWTKEY);
-    if(decoded) {
-        if(!req.session.user) {
-            req.session.user = decoded.attributes;
-        }
-        if (req.session.user.Role == 'Supporter' || req.session.user.Role == 'Admin') {
-            knex('activity').innerJoin('users', 'activity.UserId', 'users.UserId')
-                .where('users.SupporterId', req.session.user.UserId)
-                .then(function (activities) {
-                    res.send({error: false, data: {activities: activities}});
-                })
-                .catch(function (err) {
-                    res.send({error: true, data: {message: err.message}});
-                })
-
-        } else {
-            res.send({error: true, data: {message: 'Participants cannot login using web portal!'}});
-        }
-    }
-    else {
-         res.send({error: true, data: {message: 'invalid token'}});
-    }
-});
-
 
 app.post('/signin', function(req, res){
     var username = req.body.username;
@@ -253,7 +277,7 @@ app.post('/signin', function(req, res){
                 // var userPassword = sha512(password, user.attributes.Salt);
                 // if (userPassword == user.attributes.HashedPassword) {
                     var token = jwt.sign(user, JWTKEY, {
-                        expiresIn: 900 //The token expries in 15 minutes
+                        expiresIn: 7257600 //The token expries in 15 minutes
                     });
                     if (user.attributes.Role == 'Participant') {
                         req.session.user = user.attributes;
@@ -280,6 +304,7 @@ app.post('/postDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
         var newimage = '';
+        var image = 'http://amad-whs.s3.amazonaws.com/'+req.body.image+'.jpg';
         if(req.body.logId != '') {
             newimage = req.body.newImage;
         }
@@ -292,7 +317,7 @@ app.post('/postDailyLog', function (req, res) {
             req.body.vl,
             req.body.cs,
             req.body.feelings,
-            req.body.image,
+            image,
             newimage])
             .then(function (response) {
                 res.json({error: false, data: {response: response}});
@@ -372,6 +397,41 @@ app.post('/postPhysicalDailyLog', function (req, res) {
     }
 });
 
+app.post('/getUrl', function (req, res) {
+     var decoded = jwt.verify(req.body.token, JWTKEY);
+     if(decoded) {
+        aws.config.update({
+                accessKeyId: '',
+                secretAccessKey: ''
+            });
+
+        var s3 = new aws.S3();
+        var key = req.session.user.UserId+uuid.v1()+'.jpg';
+        var params = {
+            Bucket: 'amad-whs',
+            Key: key,
+            ContentType: 'image/jpeg',
+            Expires: 24*60*60
+        };
+
+        s3.getSignedUrl('putObject', params, function (err, url) {
+            res.json({error: false, data: {url : url}});
+        });
+
+    } else {
+        res.status(401).send({error: true, data: {message: 'invalid token'}});
+    }
+});
+
+app.post('/getUserData', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex.from('')
+    } else {
+        res.status(401).send({error: true, data: {message: 'invalid token'}});
+    }
+});
+
 app.post('/getDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
@@ -387,7 +447,7 @@ app.post('/getDailyLog', function (req, res) {
         }
         var startTime = req.body.date + ' 00:00:00';
         var endTime = req.body.date + ' 23:59:59';
-        knex.from('dailysummarysheet')
+        knex.from('dailysummarysheet').innerJoin('images', 'dailysummarysheet.ImageId', 'images.ImageId')
             .whereBetween('Time', [startTime, endTime])
             .andWhere('UserId', Id)
             .then(function(dailyLogs) {
@@ -968,7 +1028,7 @@ app.post('/createUser', function (req, res) {
             images = req.body.images;
         }
         knex
-            .raw('call createUser(?,?,?,?,?,?)', [req.body.username, req.body.password, req.body.role, req.body.supporterId, messages, images])
+            .raw('call createUser(?,?,?,?,?,?,?)', [req.body.username, req.body.password, req.body.role, req.body.supporterId, messages, images, new Date()])
             .then( function (response) {
                 res.send({error: false, data: {response: response}});
             })
