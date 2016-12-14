@@ -9,7 +9,8 @@ var Schema = {
     SupporterId: {type: 'string', maxlength: 254, nullable: false, primary: true},
     Score: {type: 'int', nullable: false},
     Messages: {type: 'int', nullable: false},
-    ImageTagging: {type: 'int', nullable: false}
+    ImageTagging: {type: 'int', nullable: false},
+    CreateDateTime: {type: 'datetime'}
   },
   dailysummarysheet: {
     LogId: {type: 'string', maxlength: 254, nullable: false, primary: true},
@@ -64,6 +65,12 @@ var Schema = {
   imagetags: {
     ImageId: {type: 'string', maxlength: 254, nullable: false},
     TagId: {type: 'string', maxlength: 254, nullable: false}
+  },
+  question: {
+      QuestionId: {type: 'string', maxlength: 254, nullable: false, primary: true},
+      Question: {type: 'string', maxlength: 2000, nullable: false},
+      Options: {type: 'string', maxlength: 200, nullable: false},
+      Answer: {type: 'string', maxlength: 1, nullable: false}
   }
 };
 module.exports = Schema;

@@ -250,21 +250,6 @@ app.post('/tagFood', function (req, res) {
     }
 });
 
-app.post('/getTags', function (req, res) {
-    var decoded = jwt.verify(req.body.token, JWTKEY);
-    if(decoded) {
-        knex('tags')
-            .then(function (tags) {
-                res.json({error: false, data: {tags: tags}});
-            })
-            .catch(function (err) {
-                res.json({error: true, data: {message: err.message}});
-            });
-    } else {
-        res.send({error: true, data: {message: 'Invalid token'}});
-    }
-});
-
 app.post('/signin', function(req, res){
     var username = req.body.username;
     var password = req.body.password;
@@ -397,6 +382,23 @@ app.post('/postPhysicalDailyLog', function (req, res) {
     }
 });
 
+app.post('/getQuestions', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        var offset = Math.floor(Math.random() * (30 - 1)) + 1;
+        knex('questions')
+            .then( function (questions) {
+               res.json({error: false, data: {questions: questions}});
+            })
+            .catch( function (err) {
+                res.send({error: true, data:{message: err.message}});
+            });
+    }
+    else {
+        res.send({error: true, data:{message: 'Invalid token'}});
+    }
+});
+
 app.post('/getUrl', function (req, res) {
      var decoded = jwt.verify(req.body.token, JWTKEY);
      if(decoded) {
@@ -418,15 +420,6 @@ app.post('/getUrl', function (req, res) {
             res.json({error: false, data: {url : url}});
         });
 
-    } else {
-        res.status(401).send({error: true, data: {message: 'invalid token'}});
-    }
-});
-
-app.post('/getUserData', function (req, res) {
-    var decoded = jwt.verify(req.body.token, JWTKEY);
-    if(decoded) {
-        knex.from('')
     } else {
         res.status(401).send({error: true, data: {message: 'invalid token'}});
     }
