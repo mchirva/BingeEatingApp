@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" href="css/reset.css"> <!-- CSS reset -->
+	<link rel="stylesheet" href="css/style.css"> <!-- Resource style -->
+	<script src="js/modernizr.js"></script> <!-- Modernizr -->
+  	
+	<title>Women's Health Project</title>
+</head>
+<body style="background-color: #F6F6F6;" ng-app="bingeApp" ng-controller="usersController" onload="setupqr()">
+	<header role="banner">
+		<div class="container group">
+		    <h1>WOMEN'S HEALTH PROJECT</h1><br>
+		    <p>UNC CHARLOTTE PSYCHOLOGY DEPARTMENT RESEARCH</p>
+		</div>
+		<nav class="main-nav" style="float: right;">
+		<ul>
+			<li><a id="createUser" class="cd-signin" href="#0">CREATE USER</a></li>
+			<li><a id="signout" class="cd-signin" href="#0">SIGN OUT</a></li>
+		</ul>
+	</nav>
+		<div id="cd-logo"><a href="#0"><img src="img/logo.gif" alt="Logo"></a></div>
+
+	</header>
+
+	<div class="cd-popup" role="alert" style="z-index:1; position: absolute;">
+	<div class="cd-popup-container">
+		<p id="alert"></p>
+		<!-- <ul class="cd-buttons">
+			<li><a href="#0">Yes</a></li>
+			<li><a href="#0">No</a></li>
+		</ul> -->
+		<!-- <a href="#0" class="cd-popup-close img-replace">Close</a> -->
+	</div>
+	</div>
+
+	<div class="cd-pricing-container" id="userDiv">
+		<div class="cd-pricing-switcher">
+			<p class="fieldset">
+				<input type="radio" name="duration-1" value="monthly" id="monthly-1" checked>
+				<label for="monthly-1">Supporters</label>
+				<input type="radio" name="duration-1" value="yearly" id="yearly-1">
+				<label for="yearly-1">Participants</label>
+				<span class="cd-switch"></span>
+			</p>
+		</div> <!-- .cd-pricing-switcher -->
+		<div>
+		<ul class="cd-pricing-list cd-bounce-invert">
+			<li>
+				<ul class="cd-pricing-wrapper">
+					<li data-type="monthly" class="is-visible">
+						<table class="t1" id="supporterTable">
+							<thead>
+								<th>User Id</th>
+								<th>Username</th>
+								<th>Password</th>
+								<th>Email Id</th>
+								<th></th>
+								<th></th>
+							</thead>
+							<tbody>
+								<tr ng-repeat="supporter in supporters">
+									<td contenteditable="true">{{supporter.UserId}}</td>
+									<td contenteditable="true">{{supporter.Username}}</td>
+									<td contenteditable="true">{{supporter.Password}}</td>
+									<td contenteditable="true">{{supporter.SupporterId}}</td>
+									<td><button ng-click="editSupporter($index)" type="button" disabled>Save</button></td>
+									<td><button ng-click="delSupporter($index)" type="button">Delete</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+
+					<li data-type="yearly" class="is-hidden">
+						<table class="t1" id="participantTable">
+							<thead>
+								<th>User Id</th>
+								<th>Username</th>
+								<th>Password</th>
+								<th>Supporter Id</th>
+								<th>Level</th>
+								<th>Score</th>
+								<th>Messages</th>
+								<th>Image Tagging</th>
+								<th></th>
+								<th></th>
+								<th></th>
+							</thead>
+							<tbody>
+								<tr ng-repeat="participant in participants">
+									<td contenteditable="true">{{participant.UserId}}</td>
+									<td contenteditable="true">{{participant.Username}}</td>
+									<td contenteditable="true">{{participant.Password}}</td>
+									<td contenteditable="true">{{participant.SupporterId}}</td>
+									<td contenteditable="true">{{participant.Level}}</td>
+									<td contenteditable="true">{{participant.Score}}</td>
+									<td contenteditable="true">{{participant.Messages}}</td>
+									<td contenteditable="true">{{participant.ImageTagging}}</td>
+									<td><button ng-click="editParticipant($index)" type="button" disabled>Save</button></td>
+									<td><button ng-click="delParticipant($index)" type="button">Delete</button></td>
+									<td><button ng-click="generateQRCode($index)" type="button">Generate QR code</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+					<span id="submitUser" style="margin-top: 10px;"></span>
+				</ul> <!-- .cd-pricing-wrapper -->
+			</li>
+		</ul> <!-- .cd-pricing-list -->
+		</div>
+	</div> <!-- .cd-pricing-container -->
+
+	<div id="qrdiv" style="background:lightgray; position:absolute; width:360px; height:360px">
+	    <canvas id="qrcanv"}>No Canvas Support?
+	</div>
+
+	<div class="cd-user-modal"> <!-- this is the entire modal form, including the background -->
+		<div class="cd-user-modal-container"> <!-- this is the container wrapper -->
+				<div class="cd-switcher">
+				<a href="#0">CREATE USER</a></div>
+
+			<div id="cd-login"> <!-- log in form -->
+				<form class="cd-form">
+					<p class="fieldset">
+						<label class="image-replace cd-username" for="create-username">Username</label>
+						<input class="full-width has-padding has-border" id="create-username" type="text" placeholder="Username">
+						<span class="cd-error-message" id="usernameError"></span>
+					</p>
+
+					<p class="fieldset">
+						<label class="image-replace cd-password" for="create-password">Password</label>
+						<input class="full-width has-padding has-border" id="create-password" type="password"  placeholder="Password">
+						<a href="#0" class="hide-password">Show</a>
+						<span class="cd-error-message" id="passwordError"></span>
+					</p>
+
+					<p class="fieldset">
+						<label class="image-replace cd-username" for="create-role">Role</label>
+						<select class="full-width has-padding has-border" id="create-role">
+							<option value="Supporter" >Supporter</option>
+							<option value="Participant">Participant</option>
+						</select>
+					</p>
+
+					<p class="fieldset" style="display: none;" id="supporterId">
+						<label class="image-replace cd-username" for="create-supporter">Supporter</label>
+						<select class="full-width has-padding has-border" id="create-supporter" >
+							<option value='{{supporter.UserId}}' ng-repeat="supporter in supporters">{{supporter.Username}}</option>
+						</select>
+					</p>
+
+					<p class="fieldset" style="display: none;" id="options">
+						<input type="checkbox" id="messages">
+						<label for="messages">Messages</label>
+						<input type="checkbox" id="images" style="margin-left: 50px;">
+						<label for="images">Image Tagging</label>
+					</p>
+
+					<p class="fieldset">
+						<input class="full-width" type="submit" value="CREATE" id="submit">
+					</p>
+					<span id="submitError" style="margin-top: 10px;color: red;"></span>
+				</form>
+				
+				<!-- <p class="cd-form-bottom-message"><a href="#0">Forgot your password?</a></p> -->
+			</div> <!-- cd-login -->
+
+			<a href="#0" class="cd-close-form">Close</a>
+		</div> <!-- cd-user-modal-container -->
+	</div> <!-- cd-user-modal -->	
+
+
+<footer style="position:static;right: 0;bottom: 0;left: 0;padding: 1rem;background-color: #efefef;text-align: center;">
+  <p>© 2016 Women's Health Project</p>
+  <p>Contact: <a href="mailto:fcacheli@uncc.edu">
+  Dr. Fary Cachelin</a>, <a href="mailto:vgilriva@uncc.edu">
+  Dr. Virginia Gil-Rivas</a>
+  </p>
+</footer>
+<a href="#0" class="cd-top">Top</a>
+
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.js"></script>	
+<script src="js/jquery-2.1.4.js"></script>
+<script src="js/users.js"></script> <!-- Resource jQuery -->
+<script src="js/controllers.js"></script>
+<script type="text/javascript" src="js/QRCode.js"></script>
+</body>
+</html>

@@ -6,122 +6,43 @@
 
 	<link href='http://fonts.googleapis.com/css?family=Droid+Serif|Open+Sans:400,700' rel='stylesheet' type='text/css'>
 
-	<link rel="stylesheet" href="/pages/css/reset.css"> <!-- CSS reset -->
-	<link rel="stylesheet" href="/pages/css/style.css"> <!-- Resource style -->
-	<link href="http://code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css" rel="stylesheet">
+	<link rel="stylesheet" href="css/reset.css"> <!-- CSS reset -->
+	<link rel="stylesheet" href="css/style.css"> <!-- Resource style -->
 	
   	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.js"></script>
   	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  	<script src="http://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
-  	<script src="/pages/js/modernizr.js"></script> <!-- Modernizr -->
-  	<script src="/pages/js/radialIndicator.js"></script>
-  	<script src="/pages/js/controllers.js"></script>
-  	<script src="/pages/js/timeline.js"></script>
+  	<script src="js/modernizr.js"></script> <!-- Modernizr -->
+  	<script src="js/controllers.js"></script>
+  	<script src="js/timeline.js"></script> 
 	<title>Women's Health Project</title>
 </head>
-<body ng-app="bingeApp" ng-controller="timelineController">
+<body ng-app="bingeApp" ng-controller="timelineController" style="background-color: #F6F6F6;">
 	<header role="banner">
 		<div class="container group">
 		    <h1>WOMEN'S HEALTH PROJECT</h1><br>
 		    <p>UNC CHARLOTTE PSYCHOLOGY DEPARTMENT RESEARCH</p>
 		  </div>
-		<div id="cd-logo"><a href="#0"><img src="../img/logo.gif" alt="Logo"></a></div>
-		<nav class="cd-stretchy-nav">
-		<a class="cd-nav-trigger" href="#0">
-			Menu
-			<span aria-hidden="true"></span>
-		</a>
-
-		<ul>
-			<li><a href="timeline.html"><span>Home</span></a></li>
-			<li><a href="#0"><span>Logout</span></a></li>
-			
-		</ul>
-
-		<span aria-hidden="true" class="stretchy-nav-bg"></span>
-	</nav>
+		<div id="cd-logo"><a href="#0"><img src="img/logo.gif" alt="Logo"></a></div>
+		<nav class="main-nav" style="float: right;">
+			<ul>
+				<li><a id="viewUsers" class="cd-signin" href="#0" style="visibility: hidden;">VIEW USERS</a></li>
+				<li><a id="signout" class="cd-signin" href="#0">SIGN OUT</a></li>
+			</ul>
+		</nav>
 	</header>
-
+	
 	<section id="cd-timeline" class="cd-container">
 		<div class="cd-timeline-block" ng-repeat="activity in activities" ng-model="activity">
 			<div class="cd-timeline-img cd-picture">
 			</div> 
 	
 			<div class="cd-timeline-content">
-				<h2>Participant {{activity.Username}}</h2>
+				<h2><a ng-click="setActivityIndex($index)">Participant {{activity.Username}}</a></h2>
 				<p>{{activity.Activity}}</p>
 				<span class="cd-date">{{activity.ActivityDateTime}}</span>
-				<table class="participant-nav">
-					<tr>
-						<td>
-							<a href="#" class="cd-notes cd-read-more" style="margin-left: 10px">View Notes</a>
-						</td>
-						<td>
-							<a href="#" class="cd-progress cd-read-more" style="margin-left: 10px;">View Progress</a>
-						</td>
-						<td>
-							<a href="reports.html" class="cd-reports cd-read-more" style="margin-left: 10px;">View Reports</a>
-						</td>
-						<td>
-							<a href="#" class="cd-appointment cd-read-more" style="margin-left: 10px">Schedule Appointment</a>
-						</td>
-					</tr>
-					
-				</table>
-				<div class="cd-user-modal"> 
-					<div class="cd-user-modal-container"> 
-						<div class="cd-switcher">
-							<a href="#0">View Progress</a></div>
-						<!-- <ul class="cd-switcher">
-							<li><a href="#0">View Progress</a></li>
-							<li><a href="#0">Schedule</a></li>
-						</ul> -->
-
-						<div id="progress"> 
-							<form class="cd-form">
-								<div class="cd-progress-indicator" id="progress1"></div>
-								<p class="fieldset">
-									<label class="image-replace cd-username" for="step">Step</label>
-									<input class="full-width has-padding has-border" id="step" type="text" placeholder="Step">
-									<span class="cd-error-message">Error message here!</span>
-								</p>
-								<p class="fieldset">
-									<input class="full-width updateProgress" type="submit" id="updateProgress" value="Update Progress">
-								</p>
-							</form>
-							
-						</div> 
-						<!-- <div id="appointment"> 
-							<form class="cd-form">
-								<p class="fieldset">
-									<label class="image-replace cd-username" for="date">Date</label>
-									<input class="full-width has-padding has-border" id="date" type="text" placeholder="Appointment Date">
-									<span class="cd-error-message">Error message here!</span>
-								</p>
-
-								<p class="fieldset">
-									<label class="image-replace cd-username" for="time">Time</label>
-									<select class="full-width has-padding has-border">
-									  <option value="administrator">10:00</option>
-									  <option value="supporter">11:00</option>
-									</select>
-									<span class="cd-error-message">Error message here!</span>
-								</p>
-
-								<p class="fieldset">
-									<input class="full-width" type="submit" value="Schedule Appointment">
-								</p>
-							</form>
-							
-						</div>  -->
-						<a href="#0" class="cd-close-form">Close</a>
-					</div> 
-				</div> 
-
 			</div> 
-
 		</div> 
-
+		<span id="submitTimeline" style="margin-top: 10px;"></span>
 	</section> 
 	<footer style="position:fixed;right: 0;bottom: 0;left: 0;padding: 1rem;background-color: #efefef;text-align: center;">
 	  <p>© 2016 Women's Health Project</p>
@@ -130,7 +51,6 @@
 	  Dr. Virginia Gil-Rivas</a>
 	  </p>
 	</footer>
-
- 
+	<a href="#0" class="cd-top">Top</a>
 </body>
 </html>
