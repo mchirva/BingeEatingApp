@@ -1,36 +1,14 @@
 jQuery(document).ready(function($){
-	$(function(){
-	    $('#submit').click(function(e) {
-	        e.preventDefault();
-	        var data = {};
-	        data.username = $('#signin-username').val();
-	        data.password = $('#signin-password').val();
+	$("input[type=text]").val('');
 
-	        $.ajax({
-	            type: 'POST',
-	            data: JSON.stringify(data),
-	            contentType: 'application/json',
-	            url: 'http://localhost:8080/login',
-	            success: function (data) {
-	            	console.log(data);
-	            	if(data.token != 'undefined' || data.token != ''){
-	            		var activities=[];
-		            	var length=data.data.activities.length;
-		            	for(var i=0;i<length;i++){
-		            		activities.push(data.data.activities[i]);
-		            	}
-		            	sessionStorage.setItem('token',data.token);
-		            	sessionStorage.setItem('activities',JSON.stringify(activities));
-		            	window.location.href = './timeline.html';
-	            	}
-	            },
-	            error:function (data) {
-	            	console.log(data.data.message);
-	            }
-	        });
-	    });
+	$("#signin-username").on('change', function(){
+		document.getElementById('submitError').innerHTML ="";
 	});
-	
+
+	$("#signin-password").on('change', function(){
+		document.getElementById('submitError').innerHTML ="";
+	});
+
 	var formModal = $('.cd-user-modal'),
 		formLogin = formModal.find('#cd-login'),
 		formForgotPassword = formModal.find('#cd-reset-password'),
@@ -70,7 +48,7 @@ jQuery(document).ready(function($){
 		( 'password' == passwordField.attr('type') ) ? passwordField.attr('type', 'text') : passwordField.attr('type', 'password');
 		( 'Hide' == togglePass.text() ) ? togglePass.text('Show') : togglePass.text('Hide');
 		//focus and move cursor to the end of input field
-		passwordField.putCursorAtEnd();
+		//passwordField.putCursorAtEnd();
 	});
 
 	//show forgot-password form 
@@ -102,8 +80,49 @@ jQuery(document).ready(function($){
 	//REMOVE THIS - it's just to show error messages 
 	formLogin.find('input[type="submit"]').on('click', function(event){
 		event.preventDefault();
-		formLogin.find('input[type="email"]').toggleClass('has-error').next('span').toggleClass('is-visible');
-	});
+		if($('#signin-username').val() == ""){
+			document.getElementById('submitError').innerHTML="Username can't be empty!";
+			//formLogin.find('input[type="text"]').toggleClass('has-error').next('span').toggleClass('is-visible');
+		}
+
+		else if($('#signin-password').val() == ""){
+			document.getElementById('submitError').innerHTML="Password can't be empty!";
+			//formLogin.find('input[type="text"]').toggleClass('has-error').next('span').removeClass('is-visible');
+			//formLogin.find('input[type="password"]').toggleClass('has-error').next('span').toggleClass('is-visible');
+		}
+		
+		else{
+	        var data = {};
+	        data.username = $('#signin-username').val();
+	        data.password = $('#signin-password').val();
+
+	        $.ajax({
+	            type: 'POST',
+	            data: JSON.stringify(data),
+	            contentType: 'application/json',
+	            url: 'http://localhost:8080/login',
+	            success: function (data) {
+	            	console.log(data);
+	            	sessionStorage.setItem('token',data.token);
+	            	sessionStorage.setItem('role',data.data.role);
+	            	if(data.token){
+	            		var activities=[];
+		            	var length=data.data.activities.length;
+		            	for(var i=0;i<length;i++){
+		            		activities.push(data.data.activities[i]);
+		            	}
+		            	sessionStorage.setItem('activities',JSON.stringify(activities));
+		            	window.location.href = 'timeline.html';
+	            	}
+	            	else{
+	            		document.getElementById('submitError').innerHTML=data.data.message;
+	            	}
+	            },
+	            error:function (data) {
+	            	document.getElementById('submitError').innerHTML=data.data.message;
+	            }
+	        });
+        }
+    });
+
 });
-
-

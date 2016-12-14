@@ -1,111 +1,71 @@
 jQuery(document).ready(function($){
-	
-	$("#date").datepicker({
-  	});
-
-	var formModal = $('.cd-user-modal'),
-		formProgress = formModal.find('#progress'),
-		formAppointment = formModal.find('#appointment'),
-		formModalTab = $('.cd-switcher'),
-		tabProgress = formModalTab.children('li').eq(0).children('a'),
-		tabAppointment = formModalTab.children('li').eq(1).children('a'),
-		participantNav = $('.participant-nav');
-
-	var progress1 = radialIndicator('#progress1', {
-	    barColor : '#336699',
-	    barWidth : 30,
-	    minValue: 0,
-	    maxValue: 8,
-	    radius: 50
-	}); 
-	 
-	//Default value
-	progress1.value(2);
-
-	console.log(tabProgress==tabAppointment);
-
-	//open modal
-	participantNav.on('click', function(event){
-		$(event.target).is(participantNav) && participantNav.children('ul').toggleClass('is-visible');
-	});
-
-	
-	//open login-form form
-	participantNav.on('click', '.cd-progress', viewProgress);
-	participantNav.on('click', '.cd-appointment', scheduleAppointment);
-
-	//close modal
-	formModal.on('click', function(event){
-		if( $(event.target).is(formModal) || $(event.target).is('.cd-close-form') ) {
-			formModal.removeClass('is-visible');
-		}	
-	});
-	//close modal when clicking the esc keyboard button
-	$(document).keyup(function(event){
-    	if(event.which=='27'){
-    		formModal.removeClass('is-visible');
-	    }
-    });
-
-    //switch from a tab to another
-	formModalTab.on('click', function(event) {
-		event.preventDefault();
-		console.log($(event.target).is( tabProgress ) );
-		( $(event.target).is( tabProgress ) ) ? viewProgress() : scheduleAppointment();
-	});
-
-	function viewProgress(){
-		console.log("progress");
-		participantNav.children('ul').removeClass('is-visible');
-		formModal.addClass('is-visible');
-		formProgress.addClass('is-selected');
-		formAppointment.removeClass('is-selected');
-		tabProgress.addClass('selected');
-		tabAppointment.removeClass('selected');
+	var role=sessionStorage.getItem('role');
+	if(role == 'Admin'){
+		document.getElementById('viewUsers').style.visibility = "visible";
 	}
 
-	function scheduleAppointment(){
-		console.log("appointment");
-		participantNav.children('ul').removeClass('is-visible');
-		formModal.addClass('is-visible');
-		formAppointment.addClass('is-selected');
-		formProgress.removeClass('is-selected');
-		tabAppointment.addClass('selected');
-		tabProgress.removeClass('selected');
-	}
+	if (typeof history.pushState === "function") { 
+        history.pushState("back", null, null);          
+        window.onpopstate = function () { 
+            history.pushState('back', null, null);  
 
-	//REMOVE THIS - it's just to show error messages 
-	formProgress.find('input[type="submit"]').on('click', function(event){
-		event.preventDefault();
-		//formProgress.find('input[type="text"]').toggleClass('has-error').next('span').toggleClass('is-visible');
-		progress1.value(document.getElementById('step').value);
+            var data = {};
+	    	data.token = sessionStorage.getItem('token');
+
+			$.ajax({
+		        type: 'POST',
+		        data: JSON.stringify(data),
+		        contentType: 'application/json',
+		        url: 'http://localhost:8080/logout',
+		        success: function (response) {
+		        },
+		        error:function (data) {
+		        }
+		    });
+
+		    sessionStorage.clear();
+		    location.href = 'home.html';
+         } 
+     }
+
+ 	$('#signout').click(function(e) {
+		console.log("logout");
+		var data = {};
+	    	data.token = sessionStorage.getItem('token');
+
+		$.ajax({
+	        type: 'POST',
+	        data: JSON.stringify(data),
+	        contentType: 'application/json',
+	        url: 'http://localhost:8080/logout',
+	        success: function (response) {
+	        },
+	        error:function (data) {
+	        }
+	    });
+
+	    sessionStorage.clear();
+	    location.href = 'home.html';
 	});
 
-	formAppointment.find('input[type="submit"]').on('click', function(event){
-		event.preventDefault();
-	});
+	$('#viewUsers').click(function(e) {
+		// var data = {};
+	 //    	data.token = sessionStorage.getItem('token');
 
-	if(!Modernizr.input.placeholder){
-		$('[placeholder]').focus(function() {
-			var input = $(this);
-			if (input.val() == input.attr('placeholder')) {
-				input.val('');
-		  	}
-		}).blur(function() {
-		 	var input = $(this);
-		  	if (input.val() == '' || input.val() == input.attr('placeholder')) {
-				input.val(input.attr('placeholder'));
-		  	}
-		}).blur();
-		$('[placeholder]').parents('form').submit(function() {
-		  	$(this).find('[placeholder]').each(function() {
-				var input = $(this);
-				if (input.val() == input.attr('placeholder')) {
-			 		input.val('');
-				}
-		  	})
-		});
-	}
+		// $.ajax({
+	 //        type: 'POST',
+	 //        data: JSON.stringify(data),
+	 //        contentType: 'application/json',
+	 //        url: 'http://localhost:8080/logout',
+	 //        success: function (response) {
+	 //        },
+	 //        error:function (data) {
+	 //        }
+	 //    });
+
+	 //    sessionStorage.clear();
+	    location.href = 'users.html';
+	});
 
 	// timeline
 	var timelineBlocks = $('.cd-timeline-block'),
@@ -133,25 +93,30 @@ jQuery(document).ready(function($){
 		});
 	}
 
-	// navigation
-	if( $('.cd-stretchy-nav').length > 0 ) {
-		var stretchyNavs = $('.cd-stretchy-nav');
-		
-		stretchyNavs.each(function(){
-			var stretchyNav = $(this),
-				stretchyNavTrigger = stretchyNav.find('.cd-nav-trigger');
-			
-			stretchyNavTrigger.on('click', function(event){
-				event.preventDefault();
-				stretchyNav.toggleClass('nav-is-visible');
-			});
-		});
+	// browser window scroll (in pixels) after which the "back to top" link is shown
+	var offset = 300,
+		//browser window scroll (in pixels) after which the "back to top" link opacity is reduced
+		offset_opacity = 1200,
+		//duration of the top scrolling animation (in ms)
+		scroll_top_duration = 700,
+		//grab the "back to top" link
+		$back_to_top = $('.cd-top');
 
-		$(document).on('click', function(event){
-			( !$(event.target).is('.cd-nav-trigger') && !$(event.target).is('.cd-nav-trigger span') ) && stretchyNavs.removeClass('nav-is-visible');
-		});
-	}
+	//hide or show the "back to top" link
+	$(window).scroll(function(){
+		( $(this).scrollTop() > offset ) ? $back_to_top.addClass('cd-is-visible') : $back_to_top.removeClass('cd-is-visible cd-fade-out');
+		if( $(this).scrollTop() > offset_opacity ) { 
+			$back_to_top.addClass('cd-fade-out');
+		}
+	});
 
-	
-	
+	//smooth scroll to top
+	$back_to_top.on('click', function(event){
+		event.preventDefault();
+		$('body,html').animate({
+			scrollTop: 0 ,
+		 	}, scroll_top_duration
+		);
+	});
+
 });
