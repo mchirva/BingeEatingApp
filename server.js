@@ -55,9 +55,9 @@ app.use(bodyParser.json());
 app.use(cors());
 
 //to render images
-app.use(express.static(__dirname + '/views'))
+//app.use(express.static(__dirname + '/views'))
 
-app.set('view engine', 'ejs');
+//app.set('view engine', 'ejs');
 
 var User = Bookshelf.Model.extend({
     tableName: 'users'
@@ -396,6 +396,42 @@ app.post('/getQuestions', function (req, res) {
     }
     else {
         res.send({error: true, data:{message: 'Invalid token'}});
+    }
+});
+
+app.post('/updateScore', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('users')
+            .where('UserId', req.session.user.UserId)
+            .increment('Score', req.body.score)
+            .then( function (response) {
+                res.json({error: false, data: {response: 'success'}});
+            })
+            .catch( function (err) {
+                res.json({error: true, data: {message: err.message}});
+            });
+    }
+    else {
+        res.json({error: true, data: {message: 'Invalid token'}});
+    }
+});
+
+app.post('/getAllScores', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('users')
+            .select('Score')
+            .where('Role', 'Participant')
+            .then( function (scores) {
+                res.json({error:false, data: {scores: scores}});
+            })
+            .catch( function (err) {
+                res.json({error:true, data: {message: err.message}});
+            })
+    }
+    else {
+        res.json({error: true, data: {message: 'Invalid token'}});
     }
 });
 
