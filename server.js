@@ -222,7 +222,7 @@ app.post('/changePassword', function (req, res) {
                     .catch( function (err) {
                         res.json({error: true, data: {message: err.message}});
                     });
-            })
+            });
     }
     else {
         res.json({error: true, data: {message: 'Invalid token'}});
