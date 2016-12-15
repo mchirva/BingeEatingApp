@@ -342,19 +342,7 @@ app.post('/postPhysicalDailyLog', function (req, res) {
                     MinutesPerformed: req.body.minutes
                 })
                 .then(function (dailyLogs) {
-                    knex('activity')
-                        .insert({
-                            Id: uuid.v1(),
-                            UserId: req.session.user.UserId,
-                            Activity: 'Physical Daily Log',
-                            ActivityDateTime: new Date()
-                        })
-                        .then(function (count) {
-                            res.status(200).json({error: false, data: {logs: dailyLogs}});
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({error: true, data: {message: err.message}});
-                        });
+                    res.status(200).json({error: false, data: {logs: dailyLogs}});
                 })
                 .catch(function (err) {
                     res.status(500).json({error: true, data: {message: err.message}});
@@ -370,19 +358,7 @@ app.post('/postPhysicalDailyLog', function (req, res) {
                     MinutesPerformed: req.body.minutes
                 })
                 .then(function (dailyLogs) {
-                    knex('activity')
-                        .insert({
-                            Id: uuid.v1(),
-                            UserId: req.session.user.UserId,
-                            Activity: 'Daily Log',
-                            ActivityDateTime: new Date()
-                        })
-                        .then(function (count) {
-                            res.status(200).json({error: false, data: {logs: dailyLogs}});
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({error: true, data: {message: err.message}});
-                        });
+                    res.status(200).json({error: false, data: {logs: dailyLogs}});
                 })
                 .catch(function (err) {
                     res.status(500).json({error: true, data: {message: err.message}});
@@ -787,9 +763,14 @@ app.post('/viewNotes', function (req, res) {
 app.post('/getMotivationalMessage', function (req, res) {
      var decoded = jwt.verify(req.body.token, JWTKEY);
      if(decoded){
+         var step = 0;
+         if(req.body.label == 'random') {
+             step = req.session.user.Level;
+         }
          var offset = Math.floor(Math.random() * (10 - 1)) + 1;
         knex.from('messages')
             .where('Label', req.body.label)
+            .andWhere('Step', step)
             .limit(1)
             .offset(offset)
             .then(function(message) {
