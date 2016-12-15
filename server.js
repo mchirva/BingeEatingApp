@@ -634,19 +634,7 @@ app.post('/postWeeklyLog', function (req, res) {
                 UpdatedDateTime: new Date()
             })
             .then(function (weeklySummary) {
-                knex('activity')
-                    .insert({
-                        Id: uuid.v1(),
-                        UserId: req.session.user.UserId,
-                        Activity: 'Weekly Log',
-                        ActivityDateTime: new Date()
-                    })
-                    .then( function (count) {
-                        res.status(200).json({error: false, data: {weeklyLog: weeklySummary}});
-                    })
-                    .catch( function (err) {
-                        res.status(500).json({error: true, data: {message: err.message}});
-                    });
+                res.status(200).json({error: false, data: {weeklyLog: weeklySummary}});
             })
             .catch(function (err) {
                 res.status(500).json({error: true, data: {message: err.message}});
