@@ -999,7 +999,8 @@ app.post('/replaceAndDeleteSupporter', function (req, res) {
 app.post('/getUsers', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
-        knex('users')
+        knex.select('participants.*', 'supporters.Username', 'supporters.SupporterId')
+            .from('users AS participants').leftJoin('users AS supporters', 'participants.SupporterId', 'supporters.UserId')
             .then(function (users) {
                 res.send({error: false, data: {users: users}});
             })
@@ -1019,7 +1020,6 @@ app.post('/editUser', function (req, res) {
             .where('UserId', req.body.userId)
             .update({
                 Username: req.body.username,
-                HashedPassword: sha512(req.body.password, req.body.salt),
                 Level: req.body.level,
                 SupporterId: req.body.supporterId,
                 Messages: req.body.messages,
@@ -1071,7 +1071,7 @@ app.post('/createUser', function (req, res) {
             password = sha512(req.body.password, salt);
         }
         knex
-            .raw('call createUser(?,?,?,?,?,?,?,?)', [req.body.username, password, salt, req.body.role, req.body.supporterId, messages, images, date])
+            .raw('call createUser(?,?,?,?,?,?,?,?)', [req.body.username, req.body.role, req.body.supporterId, messages, images, date, password, salt])
             .then( function (response) {
                 res.send({error: false, data: {response: response}});
             })
