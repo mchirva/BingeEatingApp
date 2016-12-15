@@ -1066,6 +1066,8 @@ app.post('/deleteUser', function (req, res){
 app.post('/createUser', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
+        var date = newDate();
+        date.setHours(date.getHours - 5);
         var messages = 0;
         var images = 0;
         if(req.body.role == 'Participant') {
@@ -1073,7 +1075,7 @@ app.post('/createUser', function (req, res) {
             images = req.body.images;
         }
         knex
-            .raw('call createUser(?,?,?,?,?,?,?)', [req.body.username, req.body.password, req.body.role, req.body.supporterId, messages, images, new Date()])
+            .raw('call createUser(?,?,?,?,?,?,?)', [req.body.username, req.body.password, req.body.role, req.body.supporterId, messages, images, date])
             .then( function (response) {
                 res.send({error: false, data: {response: response}});
             })
