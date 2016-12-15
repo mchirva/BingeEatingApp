@@ -959,7 +959,8 @@ Main components
 .cd-timeline-img.cd-picture {
   background: #75ce66;
 }
-.cd-timeline-img.cd-movie {
+
+.cd-timeline-img {
   background: #c03b44;
 }
 .cd-timeline-img.cd-location {

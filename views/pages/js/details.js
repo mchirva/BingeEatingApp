@@ -7,29 +7,23 @@ jQuery(document).ready(function($){
 	document.getElementById("appointmentTime").disabled = true;
 	
 	var index = sessionStorage.getItem('participantIndex');
-	var activities = JSON.parse(sessionStorage.getItem('activities'));
+	var users = JSON.parse(sessionStorage.getItem('users'));
 
     var data = {};
 	    data.token = sessionStorage.getItem('token');
-	    data.userId = activities[index].UserId;
+	    data.userId = users[index].UserId;
 	    data.date = $('#appointmentDate').val();
 
-    var week = 5;
     for(var i=0;i<12;i++){
-    	if((i + 1) < week)
-			$("#stepList ol").append('<li class="visited"><a id="' + (i+1) + '" href="#0"></a></li>');
-		else if((i + 1) == week)
-			$("#stepList ol").append('<li class="current"><em></em></li>');
-		else
-			$("#stepList ol").append('<li><em></em></li>');
+		$("#stepList ol").append('<li class="visited"><a id="' + (i+1) + '" href="#0"></a></li>');
 	}
 
 	
-	if(activities[index].Messages)
+	if(users[index].Messages)
 		$('#messages').prop("checked", true);
 	else
 		$('#messages').prop("checked", false);
-	if(activities[index].ImageTagging)
+	if(users[index].ImageTagging)
 		$('#imageTagging').prop("checked", true);
 	else
 		$('#imageTagging').prop("checked", false);
@@ -38,20 +32,20 @@ jQuery(document).ready(function($){
 	    console.log( $(this).is(':checked'));
 	    var data = {};
 	    	data.token = sessionStorage.getItem('token');
-	    	data.userId = activities[index].UserId;
-	    	data.username = activities[index].Username;
-	        data.password = activities[index].Password;
+	    	data.userId = users[index].UserId;
+	    	data.username = users[index].Username;
+	        data.password = users[index].Password;
 	        data.role = "Participant";
-	        data.level = activities[index].Level;
-	        data.supporterId = activities[index].SupporterId;
+	        data.level = users[index].Level;
+	        data.supporterId = users[index].SupporterId;
 	        data.messages = $('#messages').is(':checked')?1:0;
-	        data.imageTagging = activities[index].imageTagging;
+	        data.imageTagging = users[index].imageTagging;
 
 		$.ajax({
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/editUser',
+	        url: 'http://52.89.68.106:8080/editUser',
 	        success: function (response) {
 	        	console.log(response);
 	        	if(response.data.user == 1){
@@ -70,20 +64,20 @@ jQuery(document).ready(function($){
 	    console.log( $(this).is(':checked'));
 	    var data = {};
 	    	data.token = sessionStorage.getItem('token');
-	    	data.userId = activities[index].UserId;
-	    	data.username = activities[index].Username;
-	        data.password = activities[index].Password;
+	    	data.userId = users[index].UserId;
+	    	data.username = users[index].Username;
+	        data.password = users[index].Password;
 	        data.role = "Participant";
-	        data.level = activities[index].Level;
-	        data.supporterId = activities[index].SupporterId;
-	        data.messages = activities[index].Messages; 
+	        data.level = users[index].Level;
+	        data.supporterId = users[index].SupporterId;
+	        data.messages = users[index].Messages; 
 	        data.imageTagging = $('#imageTagging').is(':checked')?1:0;
 
 		$.ajax({
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/editUser',
+	        url: 'http://52.89.68.106:8080/editUser',
 	        success: function (response) {
 	        	console.log(response);
 	        	if(response.data.user == 1){
@@ -106,7 +100,7 @@ jQuery(document).ready(function($){
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        url: 'http://localhost:8080/getProgress',
+        url: 'http://52.89.68.106:8080/getProgress',
         success: function (response) {	
         	sessionStorage.setItem('progress',response.data.progress);
         	$('.knob').val(response.data.progress).trigger('change');
@@ -149,18 +143,18 @@ jQuery(document).ready(function($){
 
     $('#updateProgress').click(function(e) {
     	var index = sessionStorage.getItem('participantIndex');
-		var activities = JSON.parse(sessionStorage.getItem('activities'));
+		var users = JSON.parse(sessionStorage.getItem('users'));
 	
 	    var data = {};
 	    data.token = sessionStorage.getItem('token');
-	    data.userId = activities[index].UserId;
+	    data.userId = users[index].UserId;
 	    data.level=sessionStorage.getItem('progress');
 
 	    $.ajax({
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/setProgress',
+	        url: 'http://52.89.68.106:8080/setProgress',
 	        success: function (response) {	
 	        	$('.knob').val(data.level).trigger('change');
 	        	$('.cd-popup').addClass('is-visible');
@@ -214,16 +208,16 @@ jQuery(document).ready(function($){
 
       	var data = {};
       	var index = sessionStorage.getItem('participantIndex');
-		var activities = JSON.parse(sessionStorage.getItem('activities'));
+		var users = JSON.parse(sessionStorage.getItem('users'));
 	    data.token = sessionStorage.getItem('token');
-	    data.userId = activities[index].UserId;
+	    data.userId = users[index].UserId;
 	    data.date = date;
 
 		$.ajax({
 			type: 'POST',
 			data: JSON.stringify(data),
 			contentType: 'application/json',
-			url: 'http://localhost:8080/getDailyLog',
+			url: 'http://52.89.68.106:8080/getDailyLog',
 			success: function (response) {
             	var data=response.data.dailyLogs;
             	if(data.length > 0){
@@ -232,7 +226,10 @@ jQuery(document).ready(function($){
             		document.getElementById("printDailyDiv").style.display = "block";
             	
 	            	for(var i=0;i<data.length;i++){
-						$('#dailyLogTable > tbody:last-child').append('<tr><td>' + data[i].Time + '</td><td>'
+        				var date = data[i].Time.split('T')[0];
+	        			var time = data[i].Time.split('T')[1].substring(0,8);
+
+						$('#dailyLogTable > tbody:last-child').append('<tr><td>' + date + " " + time + '</td><td>'
 							+ data[i].FoodOrDrinkConsumed + '</td><td>' + data[i].Binge + '</td><td>' + data[i].ContextOrSetting + '</td><td>' 
 							+ data[i].Feelings + '</td><td>' + data[i].VomitingOrLaxative + '</td></tr>');
 
@@ -246,8 +243,9 @@ jQuery(document).ready(function($){
             	}
 			},
 			error:function (data) {
-				$('.cd-popup').addClass('is-visible');
-	        	document.getElementById('alert').innerHTML = data.data.message;
+				// $('.cd-popup').addClass('is-visible');
+	   //      	document.getElementById('alert').innerHTML = data.data.message;
+	   			console.log(data);
 			}
 		});
 	});
@@ -268,37 +266,53 @@ jQuery(document).ready(function($){
 	    var week = $(this).attr('id');
 	    var data = {};
 		    data.token = sessionStorage.getItem('token');
-		    data.userId = activities[index].UserId;
+		    data.userId = users[index].UserId;
 		    data.week = week;
 	    $.ajax({
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/getWeeklyLog',
+	        url: 'http://52.89.68.106:8080/getWeeklyLog',
 	        success: function (response) {	
 	        	var data=response.data.weeklyLog;
             	if(data.length > 0){
             		document.getElementById('submitWeekly').innerHTML="";
             		document.getElementById("weeklyLogTable").style.display = "table";
             		document.getElementById("printWeeklyDiv").style.display = "block";
+
+            		if(data[0].CreatedDateTime.includes('T')){
+	            		createdDate = data[0].CreatedDateTime.split('T')[0];
+	        			createdTime = data[0].CreatedDateTime.split('T')[1].substring(0,8);
+        			}
+        			else{
+    					createdDate = data[0].CreatedDateTime;
+	        			createdTime = "";
+        			}
+            	
+            		if(data[0].UpdatedDateTime.includes('T')){
+	            		updatedDate = data[0].UpdatedDateTime.split('T')[0];
+	        			updatedTime = data[0].UpdatedDateTime.split('T')[1].substring(0,8);
+        			}
+        			else{
+        				updatedDate = data[0].UpdatedDateTime;
+	        			updatedTime = "";
+        			}
             	
 					$('#weeklyLogTable > tbody:last-child').append('<tr><td>' + data[0].Week + '</td><td>'
-						+ data[0].CreatedDateTime + '</td><td>' + data[0].UpdatedDateTime + '</td><td>' + 
+						+ createdDate + " " + createdTime + '</td><td>' + updatedDate + " " + updatedTime + '</td><td>' + 
 						data[0].Binges + '</td><td>' + data[0].Events + '</td><td>' + data[0].FruitVegetableServings 
 						+ '</td><td>' + data[0].PhysicalActivity + '</td><td>' + data[0].VLD  + '</td></tr>');
 
 	            	
             	}
             	else{
-            		document.getElementById("weeklyLogTable").style.display = "none";
-            		document.getElementById("printWeeklyDiv").style.display = "none";
             		$('.cd-popup').addClass('is-visible');
 	        		document.getElementById('alert').innerHTML = "No logs to display";
             	}
 	        },
 	        error:function (data) {
 	        	$('.cd-popup').addClass('is-visible');
-	        	document.getElementById('alert').innerHTML = data.data.message;
+	        	document.getElementById('alert').innerHTML = data.statusText;
 	        }
 	    });
 	});
@@ -339,16 +353,16 @@ jQuery(document).ready(function($){
 		document.getElementById('submitAppointment').innerHTML="";
       	var data = {};
       	var index = sessionStorage.getItem('participantIndex');
-		var activities = JSON.parse(sessionStorage.getItem('activities'));
+		var users = JSON.parse(sessionStorage.getItem('users'));
 	    data.token = sessionStorage.getItem('token');
-	    data.userId = activities[index].UserId;
+	    data.userId = users[index].UserId;
 	    data.date = $('#appointmentDate').val();
 
 		$.ajax({
 			type: 'POST',
 			data: JSON.stringify(data),
 			contentType: 'application/json',
-			url: 'http://localhost:8080/getOccupiedTimes',
+			url: 'http://52.89.68.106:8080/getOccupiedTimes',
 			success: function (response) {	
 				var disableTimeRanges=[];
 				for(var i=0;i<response.data.appointments.length;i++){
@@ -392,18 +406,18 @@ jQuery(document).ready(function($){
 	    	var time = convertTo24Hour($("#appointmentTime").val());
 
 	    	var index = sessionStorage.getItem('participantIndex');
-			var activities = JSON.parse(sessionStorage.getItem('activities'));
+			var users = JSON.parse(sessionStorage.getItem('users'));
 		
 		    var data = {};
 		    data.token = sessionStorage.getItem('token');
-		    data.userId = activities[index].UserId;
+		    data.userId = users[index].UserId;
 		    data.dateTime = date + " " + time;
 
 		    $.ajax({
 		        type: 'POST',
 		        data: JSON.stringify(data),
 		        contentType: 'application/json',
-		        url: 'http://localhost:8080/setAppointment',
+		        url: 'http://52.89.68.106:8080/setAppointment',
 		        success: function (response) {	
 		        	$('.cd-popup').addClass('is-visible');
 	        		document.getElementById('alert').innerHTML = "Appointment scheduled!";
@@ -435,7 +449,7 @@ jQuery(document).ready(function($){
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        url: 'http://localhost:8080/viewNotes',
+        url: 'http://52.89.68.106:8080/viewNotes',
         success: function (response) {
         	if(response.data.notes.length > 0){
 	        	for(var i=0;i<response.data.notes.length;i++){
@@ -447,8 +461,8 @@ jQuery(document).ready(function($){
         	}
         },
         error:function (data) {
-        	$('.cd-popup').addClass('is-visible');
-        	document.getElementById('alert').innerHTML =data.data.message;
+        	//$('.cd-popup').addClass('is-visible');
+        	//document.getElementById('alert').innerHTML =data.data.message;
         }
     });
 
@@ -460,7 +474,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/logout',
+	        url: 'http://52.89.68.106:8080/logout',
 	        success: function (response) {
 	        },
 	        error:function (data) {
@@ -472,21 +486,6 @@ jQuery(document).ready(function($){
 	});
 
 	$('#viewUsers').click(function(e) {
-		// var data = {};
-	 //    	data.token = sessionStorage.getItem('token');
-
-		// $.ajax({
-	 //        type: 'POST',
-	 //        data: JSON.stringify(data),
-	 //        contentType: 'application/json',
-	 //        url: 'http://localhost:8080/logout',
-	 //        success: function (response) {
-	 //        },
-	 //        error:function (data) {
-	 //        }
-	 //    });
-
-	 //    sessionStorage.clear();
 	    location.href = 'users.html';
 	});
 

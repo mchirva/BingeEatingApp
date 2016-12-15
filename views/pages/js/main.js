@@ -82,13 +82,10 @@ jQuery(document).ready(function($){
 		event.preventDefault();
 		if($('#signin-username').val() == ""){
 			document.getElementById('submitError').innerHTML="Username can't be empty!";
-			//formLogin.find('input[type="text"]').toggleClass('has-error').next('span').toggleClass('is-visible');
 		}
 
 		else if($('#signin-password').val() == ""){
 			document.getElementById('submitError').innerHTML="Password can't be empty!";
-			//formLogin.find('input[type="text"]').toggleClass('has-error').next('span').removeClass('is-visible');
-			//formLogin.find('input[type="password"]').toggleClass('has-error').next('span').toggleClass('is-visible');
 		}
 		
 		else{
@@ -100,18 +97,18 @@ jQuery(document).ready(function($){
 	            type: 'POST',
 	            data: JSON.stringify(data),
 	            contentType: 'application/json',
-	            url: 'http://localhost:8080/login',
+	             url: 'http://52.89.68.106:8080/login',
 	            success: function (data) {
 	            	console.log(data);
 	            	sessionStorage.setItem('token',data.token);
 	            	sessionStorage.setItem('role',data.data.role);
 	            	if(data.token){
-	            		var activities=[];
-		            	var length=data.data.activities.length;
+	            		var users=[];
+		            	var length=data.data.users.length;
 		            	for(var i=0;i<length;i++){
-		            		activities.push(data.data.activities[i]);
+		            		users.push(data.data.users[i]);
 		            	}
-		            	sessionStorage.setItem('activities',JSON.stringify(activities));
+		            	sessionStorage.setItem('users',JSON.stringify(users));
 		            	window.location.href = 'timeline.html';
 	            	}
 	            	else{
@@ -119,7 +116,7 @@ jQuery(document).ready(function($){
 	            	}
 	            },
 	            error:function (data) {
-	            	document.getElementById('submitError').innerHTML=data.data.message;
+	            	document.getElementById('submitError').innerHTML=data.statusText;
 	            }
 	        });
         }

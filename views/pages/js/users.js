@@ -2,17 +2,24 @@ jQuery(document).ready(function($){
 	document.getElementById('monthly-1').checked = true;
 	$("input[type=text]").val('');
 	$("input[type=password]").val('');
-	$('select').val('');
-	$('select').on('change', function() {
+	$('select option:first-child').attr("selected", "selected");
+	$('#create-role').on('change', function() {
 	  if(this.value == 'Participant'){
-	  	document.getElementById('supporterId').style.display = "block";
+	  	document.getElementById('create-supporter-select').style.display = "block";
+	  	document.getElementById('create-supporter-email').style.display = "none";
+	  	document.getElementById('passwordField').style.display = "none";
 	  	document.getElementById('options').style.display = "block";
 	  }
 	  else{
-	  	document.getElementById('supporterId').style.display = "none";
+	  	document.getElementById('messages').checked=false;
+		document.getElementById('images').checked=false;
+	  	document.getElementById('create-supporter-select').style.display = "none";
+	  	document.getElementById('create-supporter-email').style.display = "block";
+	  	document.getElementById('passwordField').style.display = "block";
 	  	document.getElementById('options').style.display = "none";
 	  }
 	})
+	
 	var data = {};
     	data.token = sessionStorage.getItem('token');
 
@@ -20,7 +27,7 @@ jQuery(document).ready(function($){
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        url: 'http://localhost:8080/getUsers',
+        url: 'http://52.89.68.106:8080/getUsers',
         success: function (response) {
         	var participants=[];
         	var supporters=[];
@@ -34,6 +41,7 @@ jQuery(document).ready(function($){
         		}
         		
         	}
+        	console.log(supporters);
         	sessionStorage.setItem('supporters',JSON.stringify(supporters));
         	sessionStorage.setItem('participants',JSON.stringify(participants));
         },
@@ -43,6 +51,10 @@ jQuery(document).ready(function($){
 			}
         }
     });
+
+    $('#qrDone').click(function(e) {
+		document.getElementById('qr').style.display = "none";
+	});
 
 	$('#viewParticipants').click(function(e) {
 		location.href="timeline.html";
@@ -56,7 +68,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/logout',
+	        url: 'http://52.89.68.106:8080/logout',
 	        success: function (response) {
 	        },
 	        error:function (data) {
@@ -68,7 +80,7 @@ jQuery(document).ready(function($){
 	});
 
 	$('td[contenteditable=true]').blur(function () {
-	    $(this).parent('tr').find('button').removeAttr('disabled');
+	    $(this).parent('tr').find('input').removeAttr('disabled');
 	 });
 
 	//hide the subtle gradient layer (.cd-pricing-list > li::after) when pricing table has been scrolled to the end (mobile version only)
@@ -255,8 +267,10 @@ jQuery(document).ready(function($){
 
 	formLogin.find('input[type="submit"]').on('click', function(event){
 		event.preventDefault();
-		if($('#create-username').val() == "" || $('#create-password').val() == "" || $('#create-role').val() == ""){
+		if($('#create-username').val() == "" || $('#create-role').val() == ""){
 			document.getElementById('submitError').innerHTML="Invalid data!";
+			if($('#create-role').val() == 'Supporter' && !(validateEmail($('#create-supporter-email').val())))
+				document.getElementById('submitError').innerHTML="Invalid e-mail!";
 		}
 		else{
 			var data = {};
@@ -264,19 +278,24 @@ jQuery(document).ready(function($){
 		    	data.username = $('#create-username').val();
 		        data.password = $('#create-password').val();
 		        data.role = $('#create-role').val();
-		        data.supporterId = $('#create-supporter').val();
+		        //data.supporterId = $('#create-supporter').val();
 		        data.messages = $('#messages').is(':checked')?1:0;
 		        data.images = $('#images').is(':checked')?1:0;
+		        if(data.role == 'Supporter')
+					data.supporterId = $('#create-supporter-email').val();
+				else
+					data.supporterId = $('#create-supporter-select').val();
+
 		        console.log(data);
 			$.ajax({
 		        type: 'POST',
 		        data: JSON.stringify(data),
 		        contentType: 'application/json',
-		        url: 'http://localhost:8080/createUser',
+		        url: 'http://52.89.68.106:8080/createUser',
 		        success: function (response) {
 		        	console.log(response)
 		        	if(response.data.message){
-		        		document.getElementById('submitError').innerHTML="Invalid data!";
+		        		document.getElementById('submitError').innerHTML=response.data.message;
 		        	}
 		        	else{
 			        	$("input[type=text]").val('');
@@ -292,4 +311,9 @@ jQuery(document).ready(function($){
 		    });
 		}
     });
+
+    function validateEmail(email) {
+	  var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	  return re.test(email);
+	}
 });

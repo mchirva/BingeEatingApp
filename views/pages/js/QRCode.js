@@ -704,16 +704,18 @@ function genframe(instring)
 var wd, ht, qrc;
 function setupqr(){
 //    window.scrollTo(0,1)
-    wd = window.innerWidth-10;
-    ht = window.innerHeight-10;
-    mp = document.getElementById("mapcanv");
+    wd=250;
+    ht=250;
+    // wd = window.innerWidth-10;
+    // ht = window.innerHeight-10;
+    //mp = document.getElementById("mapcanv");
 
-    qrd = document.getElementById("qrdiv");
-    qrd.style.width = wd + "px";
-    qrd.style.height = ht + "px";
+    // qrd = document.getElementById("qrdiv");
+    // qrd.style.width = wd + "px";
+    // qrd.style.height = ht + "px";
 
-    wd -= 4;
-    ht -= 80;
+    // wd -= 4;
+    // ht -= 80;
 
     var elem = document.getElementById('qrcanv');
     qrc = elem.getContext('2d');
@@ -725,10 +727,7 @@ function setupqr(){
 }
 
 function doqr(token) {
-    // d = document;
-    // ecclevel = d.qrinp.ECC.value;
-    // qf = genframe(d.qrinp.qrinput.value);
-    console.log(token);
+    document.getElementById('qr').style.display = "table";
     ecclevel = 2;
     qf = genframe(token);
     qrc.lineWidth=1;

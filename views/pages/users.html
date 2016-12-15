@@ -28,7 +28,7 @@
 
 	</header>
 
-	<div class="cd-popup" role="alert" style="z-index:1; position: absolute;">
+	<div class="cd-popup" role="alert">
 	<div class="cd-popup-container">
 		<p id="alert"></p>
 		<!-- <ul class="cd-buttons">
@@ -49,6 +49,21 @@
 				<span class="cd-switch"></span>
 			</p>
 		</div> <!-- .cd-pricing-switcher -->
+		<table id="qr" style="display: none">
+			<tr>
+				<td>
+					<!-- <div id="qrdiv"> -->
+					    <canvas id="qrcanv"}>No Canvas Support?
+					<!-- </div> -->
+				</td>
+				<td style="vertical-align: middle;">
+					<input type="image" src="img/save.png" id="qrDone">
+				</td>
+			</tr>
+		</table>
+		
+
+		
 		<div>
 		<ul class="cd-pricing-list cd-bounce-invert">
 			<li>
@@ -56,21 +71,24 @@
 					<li data-type="monthly" class="is-visible">
 						<table class="t1" id="supporterTable">
 							<thead>
-								<th>User Id</th>
+								<th style="display: none;">User Id</th>
 								<th>Username</th>
-								<th>Password</th>
+								<th style="display: none;">Password</th>
 								<th>Email Id</th>
+								<th style="display: none;">Salt</th>
 								<th></th>
 								<th></th>
 							</thead>
 							<tbody>
 								<tr ng-repeat="supporter in supporters">
-									<td contenteditable="true">{{supporter.UserId}}</td>
+									<td style="display: none;" contenteditable="true">{{supporter.UserId}}</td>
 									<td contenteditable="true">{{supporter.Username}}</td>
-									<td contenteditable="true">{{supporter.Password}}</td>
+									<td style="display: none;"  contenteditable="true">{{supporter.HashedPassword}}</td>
 									<td contenteditable="true">{{supporter.SupporterId}}</td>
-									<td><button ng-click="editSupporter($index)" type="button" disabled>Save</button></td>
-									<td><button ng-click="delSupporter($index)" type="button">Delete</button></td>
+									<td style="display: none">{{supporter.Salt}}</td>
+									<td style="vertical-align: middle;"><input type="image" src="img/save.png" ng-click="editSupporter($index)" disabled></td>
+									<td style="vertical-align: middle;"><input type="image" src="img/del.png" ng-click="delSupporter($index)"></td>
+									</td>
 								</tr>
 							</tbody>
 						</table>
@@ -79,31 +97,35 @@
 					<li data-type="yearly" class="is-hidden">
 						<table class="t1" id="participantTable">
 							<thead>
-								<th>User Id</th>
-								<th>Username</th>
-								<th>Password</th>
+								<th style="display: none;">User Id</th>
+								<th >Username</th>
+								<th style="display: none;">Password</th>
 								<th>Supporter Id</th>
 								<th>Level</th>
 								<th>Score</th>
 								<th>Messages</th>
 								<th>Image Tagging</th>
+								<th style="display: none;">Salt</th>
 								<th></th>
 								<th></th>
 								<th></th>
+								
 							</thead>
 							<tbody>
 								<tr ng-repeat="participant in participants">
-									<td contenteditable="true">{{participant.UserId}}</td>
+									<td style="display: none;" contenteditable="true">{{participant.UserId}}</td>
 									<td contenteditable="true">{{participant.Username}}</td>
-									<td contenteditable="true">{{participant.Password}}</td>
+									<td style="display: none;">{{participant.HashedPassword}}</td>
 									<td contenteditable="true">{{participant.SupporterId}}</td>
 									<td contenteditable="true">{{participant.Level}}</td>
-									<td contenteditable="true">{{participant.Score}}</td>
+									<td>{{participant.Score}}</td>
 									<td contenteditable="true">{{participant.Messages}}</td>
 									<td contenteditable="true">{{participant.ImageTagging}}</td>
-									<td><button ng-click="editParticipant($index)" type="button" disabled>Save</button></td>
-									<td><button ng-click="delParticipant($index)" type="button">Delete</button></td>
-									<td><button ng-click="generateQRCode($index)" type="button">Generate QR code</button></td>
+									<td style="display: none;">{{participant.Salt}}</td>
+									<td style="vertical-align: middle;"><input type="image" src="img/save.png" ng-click="editParticipant($index)" disabled></td>
+									<td style="vertical-align: middle;"><input type="image" src="img/del.png" ng-click="delPartcipant($index)"></td>
+									<td style="vertical-align: middle;"><input type="image" src="img/qr.png" ng-click="generateQRCode($index)"></td>
+									
 								</tr>
 							</tbody>
 						</table>
@@ -115,9 +137,6 @@
 		</div>
 	</div> <!-- .cd-pricing-container -->
 
-	<div id="qrdiv" style="background:lightgray; position:absolute; width:360px; height:360px">
-	    <canvas id="qrcanv"}>No Canvas Support?
-	</div>
 
 	<div class="cd-user-modal"> <!-- this is the entire modal form, including the background -->
 		<div class="cd-user-modal-container"> <!-- this is the container wrapper -->
@@ -132,7 +151,7 @@
 						<span class="cd-error-message" id="usernameError"></span>
 					</p>
 
-					<p class="fieldset">
+					<p class="fieldset" id="passwordField" style="display: none">
 						<label class="image-replace cd-password" for="create-password">Password</label>
 						<input class="full-width has-padding has-border" id="create-password" type="password"  placeholder="Password">
 						<a href="#0" class="hide-password">Show</a>
@@ -142,19 +161,20 @@
 					<p class="fieldset">
 						<label class="image-replace cd-username" for="create-role">Role</label>
 						<select class="full-width has-padding has-border" id="create-role">
-							<option value="Supporter" >Supporter</option>
 							<option value="Participant">Participant</option>
+							<option value="Supporter" >Supporter</option>
 						</select>
 					</p>
 
-					<p class="fieldset" style="display: none;" id="supporterId">
+					<p class="fieldset">
 						<label class="image-replace cd-username" for="create-supporter">Supporter</label>
-						<select class="full-width has-padding has-border" id="create-supporter" >
-							<option value='{{supporter.UserId}}' ng-repeat="supporter in supporters">{{supporter.Username}}</option>
+						<input style="display: none" class="full-width has-padding has-border" id="create-supporter-email" type="email"  placeholder="E-mail">
+						<select class="full-width has-padding has-border" id="create-supporter-select" >
+							<option value='{{supporter.SupporterId}}' ng-repeat="supporter in supporters">{{supporter.SupporterId}}</option>
 						</select>
 					</p>
 
-					<p class="fieldset" style="display: none;" id="options">
+					<p class="fieldset" id="options">
 						<input type="checkbox" id="messages">
 						<label for="messages">Messages</label>
 						<input type="checkbox" id="images" style="margin-left: 50px;">
@@ -186,8 +206,9 @@
 
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.js"></script>	
 <script src="js/jquery-2.1.4.js"></script>
-<script src="js/users.js"></script> <!-- Resource jQuery -->
 <script src="js/controllers.js"></script>
-<script type="text/javascript" src="js/QRCode.js"></script>
+<script src="js/users.js"></script> <!-- Resource jQuery -->
+
+<script src="js/QRCode.js"></script>
 </body>
 </html>

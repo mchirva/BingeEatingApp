@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<link href='http://fonts.googleapis.com/css?family=Droid+Serif|Open+Sans:400,700' rel='stylesheet' type='text/css'>
+	
 
 	<link rel="stylesheet" href="css/reset.css"> <!-- CSS reset -->
 	<link rel="stylesheet" href="css/style.css"> <!-- Resource style -->
@@ -32,14 +33,13 @@
 	</header>
 	
 	<section id="cd-timeline" class="cd-container">
-		<div class="cd-timeline-block" ng-repeat="activity in activities" ng-model="activity">
-			<div class="cd-timeline-img cd-picture">
+		<div class="cd-timeline-block" ng-repeat="user in users" ng-model="activity">
+			<div class="cd-timeline-img">
 			</div> 
 	
 			<div class="cd-timeline-content">
-				<h2><a ng-click="setActivityIndex($index)">Participant {{activity.Username}}</a></h2>
-				<p>{{activity.Activity}}</p>
-				<span class="cd-date">{{activity.ActivityDateTime}}</span>
+				<h2><a ng-click="setUserIndex($index)">Participant {{user.Username}}</a></h2>
+				<span class="cd-date">{{user.CreateDateTime | format}}</span>
 			</div> 
 		</div> 
 		<span id="submitTimeline" style="margin-top: 10px;"></span>
