@@ -301,7 +301,7 @@ app.post('/postDailyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
         var newimage = '';
-        var image = 'http://amad-whs.s3.amazonaws.com/'+req.body.image+'.jpg';
+        var image = 'http://amad-whs.s3.amazonaws.com/'+req.body.image;
         if(req.body.logId != '') {
             newimage = req.body.newImage;
         }
