@@ -207,7 +207,7 @@ app.post('/changePassword', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
         var update = {};
-        if(decoded.password == '') {
+        if(!decoded.password) {
             var date = new Date();
             date.setHours(date.getHours() - 5);
             var salt = genRandomString(16);
@@ -999,8 +999,7 @@ app.post('/replaceAndDeleteSupporter', function (req, res) {
 app.post('/getUsers', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
-        knex.select('participants.*', 'supporters.Username', 'supporters.SupporterId')
-            .from('users AS participants').leftJoin('users AS supporters', 'participants.SupporterId', 'supporters.UserId')
+        knex('users')
             .then(function (users) {
                 res.send({error: false, data: {users: users}});
             })
