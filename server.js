@@ -57,7 +57,7 @@ app.use(cors());
 //to render images
 //app.use(express.static(__dirname + '/views'))
 
-//app.set('view engine', 'ejs');
+app.set('view engine', 'ejs');
 
 var User = Bookshelf.Model.extend({
     tableName: 'users'
@@ -987,6 +987,22 @@ app.post('/logout', function (req, res){
         }
         req.session.destroy();
         //remove deviceID
+    }
+});
+
+app.post('/replaceAndDeleteSupporter', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex.raw('call replaceAndDeleteSupporter(?,?)', [req.body.oldSupporterEmail, req.body.newSupporterEmail])
+            .then(function (response) {
+                res.send({error: false, data: {response: 'deleted'}});
+            })
+            .catch(function (err) {
+                res.send({error: true, data: {message: err.message}});
+            });
+    }
+    else {
+        res.send({error: true, data: {message: 'Invalid token'}});
     }
 });
 
