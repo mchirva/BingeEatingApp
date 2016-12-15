@@ -128,14 +128,14 @@ app.use(function (req, res, next) {
 app.post('/login', function(req, res){
     var username = req.body.username;
     var password = req.body.password;
-    User.forge({username: username, password: password})
+    User.forge({username: username})
         .fetch()
         .then(function (user){
             if (!user) {
-                res.json({error: true, data: {message: "Invalid credentials"}});
+                res.json({error: true, data: {message: "No such user exists!"}});
             }else {
-                // var userPassword = sha512(password, user.attributes.Salt);
-                // if (userPassword == user.attributes.HashedPassword) {
+                var userPassword = sha512(password, user.attributes.Salt);
+                if (userPassword == user.attributes.HashedPassword) {
                     var token = jwt.sign(user, JWTKEY, {
                         expiresIn: 900 //The token expries in 15 minutes
                     });
@@ -166,10 +166,10 @@ app.post('/login', function(req, res){
                             data: {message: 'Oops! Only supporters can login using the web portal!'}
                         });
                     }
-                // }
-                // else {
-                //     res.send({error: true, data: {message: 'Invalid Password'}});
-                // }
+                }
+                else {
+                    res.send({error: true, data: {message: 'Invalid Password'}});
+                }
             }
         })
         .catch(function (err) {
@@ -193,7 +193,7 @@ var sha512 = function(password, salt){
 app.post('/getToken', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
-        var token = jwt.sign({UserId: req.body.userId}, JWTKEY, {
+        var token = jwt.sign({UserId: req.body.userId, HashedPassword: req.body.hashedPassword, Salt: req.body.salt}, JWTKEY, {
             expiresIn: 900 //The token expries in 15 minutes
         });
         res.send({error: false, data: {token: token}});
@@ -206,9 +206,21 @@ app.post('/getToken', function (req, res) {
 app.post('/changePassword', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
+        var update = {};
+        if(decoded.password == '') {
+            var date = new Date();
+            date.setHours(date.getHours() - 5);
+            var salt = genRandomString(16);
+            var hashedPassword = sha512(req.body.password, salt);
+            update = {hashedPassword: hashedPassword, salt: salt, createDateTime: date};
+        }
+        else{
+            var hashedPassword = sha512(req.body.password, decoded.Salt);
+            update = {hashedPassword: hashedPassword};
+        }
         knex('users')
             .where('UserId', decoded.UserId)
-            .update({password: req.body.password, CreateDateTime: new Date()})
+            .update(update)
             .then ( function (count) {
                 knex('users')
                     .where('UserId', decoded.UserId)
@@ -253,14 +265,14 @@ app.post('/tagFood', function (req, res) {
 app.post('/signin', function(req, res){
     var username = req.body.username;
     var password = req.body.password;
-    User.forge({username: username, password: password})
+    User.forge({username: username})
         .fetch()
         .then(function (user){
             if (!user) {
-                res.status(401).json({error: true, data: {message: "Invalid user credentials"}});
+                res.status(401).json({error: true, data: {message: "No such user exits!"}});
             }else {
-                // var userPassword = sha512(password, user.attributes.Salt);
-                // if (userPassword == user.attributes.HashedPassword) {
+                 var userPassword = sha512(password, user.attributes.Salt);
+                 if (userPassword == user.attributes.HashedPassword) {
                     var token = jwt.sign(user, JWTKEY, {
                         expiresIn: 7257600 //The token expries in 15 minutes
                     });
@@ -274,10 +286,10 @@ app.post('/signin', function(req, res){
                             data: {message: 'Oops! Only participants can login using the mobile application!'}
                         });
                     }
-                // }
-                // else {
-                //     res.send({error: true, data: {message: 'Invalid Password'}});
-                // }
+                }
+                else {
+                    res.send({error: true, data: {message: 'Invalid Password'}});
+                }
             }
         })
         .catch(function (err) {
@@ -923,24 +935,6 @@ app.post('/getProgress', function (req, res) {
     }
 });
 
-app.post('/getChallenge', function (req, res) {
-    var decoded = jwt.verify(req.body.token, JWTKEY);
-    if(decoded) {
-        if(!req.session.user) {
-            req.session.user = decoded.attributes;
-        }
-        var challengeId = Math.floor(Math.random() * (21 - 1)) + 1;
-        knex('challenges')
-            .where('ChallengeId', challengeId)
-            .then(function (challenge) {
-                res.json({error: false, data: {challenge: challenge}});
-            })
-            .catch(function (err) {
-                res.status(500).json({error: true, data: {message: err.message}});
-            });
-    }
-});
-
 cron.schedule('0 8 * * *', function(){
     var tomorrow = new Date() + 1;
     // knex('appointments').innerJoin('users', 'appointments.UserId', 'users.UserId')
@@ -974,10 +968,6 @@ cron.schedule('*/15 * * * *', function () {
             //catch error
         });
 });
-
-var getSupporterId = function(supporterEmail){
-
-};
 
 app.post('/logout', function (req, res){
     var decoded = jwt.verify(req.body.token, JWTKEY);
@@ -1029,7 +1019,7 @@ app.post('/editUser', function (req, res) {
             .where('UserId', req.body.userId)
             .update({
                 Username: req.body.username,
-                Password: req.body.password,
+                HashedPassword: sha512(req.body.password, req.body.salt),
                 Level: req.body.level,
                 SupporterId: req.body.supporterId,
                 Messages: req.body.messages,
@@ -1066,24 +1056,28 @@ app.post('/deleteUser', function (req, res){
 app.post('/createUser', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
-        var date = newDate();
-        date.setHours(date.getHours - 5);
+        var date = new Date();
+        date.setHours(date.getHours() - 5);
         var messages = 0;
         var images = 0;
+        var password = '';
+        var salt = '';
         if(req.body.role == 'Participant') {
             messages = req.body.messages;
             images = req.body.images;
         }
+        else {
+            salt = genRandomString(16);
+            password = sha512(req.body.password, salt);
+        }
         knex
-            .raw('call createUser(?,?,?,?,?,?,?)', [req.body.username, req.body.password, req.body.role, req.body.supporterId, messages, images, date])
+            .raw('call createUser(?,?,?,?,?,?,?,?)', [req.body.username, password, salt, req.body.role, req.body.supporterId, messages, images, date])
             .then( function (response) {
                 res.send({error: false, data: {response: response}});
             })
             .catch (function (err) {
                 res.send({error: false, data: {message: err.message}});
             });
-        //var salt = genRandomString(16);
-
     }
     else {
         res.status(401).json({error: true, data: {message: 'Invalid Token'}});
