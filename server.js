@@ -55,7 +55,10 @@ app.use(bodyParser.json());
 app.use(cors());
 
 //to render images
-//app.use(express.static(__dirname + '/views'))
+app.use(express.static(__dirname + '/views'))
+app.use("/img",express.static(__dirname + "/views/pages/img"));//priyanka
+app.use("/css",express.static(__dirname + "/views/pages/css"));//priyanka
+app.use("/js",express.static(__dirname + "/views/pages/js"));//priyanka
 
 app.set('view engine', 'ejs');
 
@@ -427,12 +430,12 @@ app.post('/getUrl', function (req, res) {
      var decoded = jwt.verify(req.body.token, JWTKEY);
      if(decoded) {
         aws.config.update({
-                accessKeyId: '',
-                secretAccessKey: ''
+                accessKeyId: 'AKIAILHS2D4RZYEJ27NA',
+                secretAccessKey: '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'
             });
 
         var s3 = new aws.S3();
-        var key = req.session.user.UserId+uuid.v1()+'.jpg';
+        var key = req.session.user.UserId+uuid.v1();
         var params = {
             Bucket: 'amad-whs',
             Key: key,

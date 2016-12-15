@@ -27,7 +27,7 @@ jQuery(document).ready(function($){
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        url: 'http://52.89.68.106:8080/getUsers',
+        url: 'http://localhost:8080/getUsers',
         success: function (response) {
         	var participants=[];
         	var supporters=[];
@@ -68,7 +68,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://52.89.68.106:8080/logout',
+	        url: 'http://localhost:8080/logout',
 	        success: function (response) {
 	        },
 	        error:function (data) {
@@ -291,7 +291,7 @@ jQuery(document).ready(function($){
 		        type: 'POST',
 		        data: JSON.stringify(data),
 		        contentType: 'application/json',
-		        url: 'http://52.89.68.106:8080/createUser',
+		        url: 'http://localhost:8080/createUser',
 		        success: function (response) {
 		        	console.log(response)
 		        	if(response.data.message){

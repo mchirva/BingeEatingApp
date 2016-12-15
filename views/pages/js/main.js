@@ -97,7 +97,7 @@ jQuery(document).ready(function($){
 	            type: 'POST',
 	            data: JSON.stringify(data),
 	            contentType: 'application/json',
-	             url: 'http://52.89.68.106:8080/login',
+	             url: 'http://localhost:8080/login',
 	            success: function (data) {
 	            	console.log(data);
 	            	sessionStorage.setItem('token',data.token);
@@ -109,7 +109,7 @@ jQuery(document).ready(function($){
 		            		users.push(data.data.users[i]);
 		            	}
 		            	sessionStorage.setItem('users',JSON.stringify(users));
-		            	window.location.href = 'timeline.html';
+		            	window.location.href = '/pages/timeline.html';
 	            	}
 	            	else{
 	            		document.getElementById('submitError').innerHTML=data.data.message;

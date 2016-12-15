@@ -60,7 +60,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://52.89.68.106:8080/editUser',
+			        url: 'http://localhost:8080/editUser',
 			        success: function (response) {
 			        	console.log(response);
 			        	if(response.data.user == 1){
@@ -117,7 +117,7 @@ var bingeApp = angular.module('bingeApp', []);
 					        type: 'POST',
 					        data: JSON.stringify(data),
 					        contentType: 'application/json',
-					        url: 'http://52.89.68.106:8080/replaceAndDeleteSupporter',
+					        url: 'http://localhost:8080/replaceAndDeleteSupporter',
 					        success: function (response) {
 					        	console.log(response);
 					        	if(response.data.deleted == 1){
@@ -157,7 +157,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://52.89.68.106:8080/editUser',
+			        url: 'http://localhost:8080/editUser',
 			        success: function (response) {
 			        	console.log(response);
 			        	if(response.data.user == 1){
@@ -182,7 +182,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://52.89.68.106:8080/deleteUser',
+			        url: 'http://localhost:8080/deleteUser',
 			        success: function (response) {
 			        	if(response.data.deleted == 1){
 			        		$('.cd-popup').addClass('is-visible');
@@ -207,7 +207,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://52.89.68.106:8080/getToken',
+			        url: 'http://localhost:8080/getToken',
 			        success: function (response) {
 			        	doqr(response.data.token);
 			        },
