@@ -97,7 +97,7 @@ jQuery(document).ready(function($){
 	            type: 'POST',
 	            data: JSON.stringify(data),
 	            contentType: 'application/json',
-	             url: 'http://localhost:8080/login',
+	             url: 'http://52.89.68.106:8080/login',
 	            success: function (data) {
 	            	console.log(data);
 	            	sessionStorage.setItem('token',data.token);
