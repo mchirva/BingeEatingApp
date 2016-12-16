@@ -390,6 +390,33 @@ app.post('/getQuestions', function (req, res) {
     }
 });
 
+app.post('/getImage', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded) {
+        knex('images')
+            .count('ImageId AS count')
+            .then( function (result) {
+                var value = result[0].count;
+                var offset = Math.floor(Math.random() * (value - 1)) + 1;
+                knex('images')
+                    .limit(1)
+                    .offset(offset)
+                    .then( function (image) {
+                        res.json({error: false, data: { image: image}});
+                    })
+                    .catch( function (err) {
+                        res.json({error: true, data: { message: err.message}});
+                    })
+            })
+            .catch( function (err) {
+                res.json({error: true, data: {message: err.message}});
+            });
+    }
+    else {
+        res.json({error: true, data: {message: 'Invalid token'}});
+    }
+});
+
 app.post('/updateScore', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded) {
@@ -430,8 +457,8 @@ app.post('/getUrl', function (req, res) {
      var decoded = jwt.verify(req.body.token, JWTKEY);
      if(decoded) {
         aws.config.update({
-                accessKeyId: 'AKIAILHS2D4RZYEJ27NA',
-                secretAccessKey: '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'
+                accessKeyId: '',
+                secretAccessKey: ''
             });
 
         var s3 = new aws.S3();
@@ -467,7 +494,7 @@ app.post('/getDailyLog', function (req, res) {
         }
         var startTime = req.body.date + ' 00:00:00';
         var endTime = req.body.date + ' 23:59:59';
-        knex.from('dailysummarysheet').innerJoin('images', 'dailysummarysheet.ImageId', 'images.ImageId')
+        knex.from('dailysummarysheet').leftJoin('images', 'dailysummarysheet.ImageId', 'images.ImageId')
             .whereBetween('Time', [startTime, endTime])
             .andWhere('UserId', Id)
             .then(function(dailyLogs) {
