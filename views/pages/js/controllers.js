@@ -60,7 +60,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://localhost:8080/editUser',
+			        url: 'http://52.89.68.106:8080/editUser',
 			        success: function (response) {
 			        	console.log(response);
 			        	if(response.data.user == 1){
@@ -99,13 +99,15 @@ var bingeApp = angular.module('bingeApp', []);
 
 		            var data = {};
 				    	data.token = sessionStorage.getItem('token');
-				    	data.oldSupporterEmail = table.rows[index+1].cells[1].innerHTML;
+				    	data.oldSupporterEmail = table.rows[index+1].cells[3].innerHTML;
+
+			    	console.log(data);
 
 			    	for(var i=0;i<$scope.supporters.length;i++){
 			    		if($scope.supporters[i].SupporterId != data.oldSupporterEmail){
 			    			var newSupp = document.getElementById(index+1);
 							var option = document.createElement("option");
-							option.text = $scope.supporters[i].SupporterId;
+							option.text = $scope.supporters[i].SupporterId.trim();
 							newSupp.add(option);
 			    		}
 			    	}
@@ -117,7 +119,7 @@ var bingeApp = angular.module('bingeApp', []);
 					        type: 'POST',
 					        data: JSON.stringify(data),
 					        contentType: 'application/json',
-					        url: 'http://localhost:8080/replaceAndDeleteSupporter',
+					        url: 'http://52.89.68.106:8080/replaceAndDeleteSupporter',
 					        success: function (response) {
 					        	console.log(response);
 					        	if(response.data.deleted == 1){
@@ -128,7 +130,7 @@ var bingeApp = angular.module('bingeApp', []);
 					        },
 					        error:function (data) {
 					        	$('.cd-popup').addClass('is-visible');
-			        			document.getElementById('alert').innerHTML = data.data.message;
+			        			document.getElementById('alert').innerHTML = data.statusText;
 					        }
 					    });
 					});
@@ -157,7 +159,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://localhost:8080/editUser',
+			        url: 'http://52.89.68.106:8080/editUser',
 			        success: function (response) {
 			        	console.log(response);
 			        	if(response.data.user == 1){
@@ -182,7 +184,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://localhost:8080/deleteUser',
+			        url: 'http://52.89.68.106:8080/deleteUser',
 			        success: function (response) {
 			        	if(response.data.deleted == 1){
 			        		$('.cd-popup').addClass('is-visible');
@@ -207,7 +209,7 @@ var bingeApp = angular.module('bingeApp', []);
 			        type: 'POST',
 			        data: JSON.stringify(data),
 			        contentType: 'application/json',
-			        url: 'http://localhost:8080/getToken',
+			        url: 'http://52.89.68.106:8080/getToken',
 			        success: function (response) {
 			        	doqr(response.data.token);
 			        },

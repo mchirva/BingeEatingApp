@@ -45,7 +45,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/editUser',
+	        url: 'http://52.89.68.106:8080/editUser',
 	        success: function (response) {
 	        	console.log(response);
 	        	if(response.data.user == 1){
@@ -77,7 +77,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/editUser',
+	        url: 'http://52.89.68.106:8080/editUser',
 	        success: function (response) {
 	        	console.log(response);
 	        	if(response.data.user == 1){
@@ -100,7 +100,7 @@ jQuery(document).ready(function($){
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        url: 'http://localhost:8080/getProgress',
+        url: 'http://52.89.68.106:8080/getProgress',
         success: function (response) {	
         	sessionStorage.setItem('progress',response.data.progress);
         	$('.knob').val(response.data.progress).trigger('change');
@@ -154,7 +154,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/setProgress',
+	        url: 'http://52.89.68.106:8080/setProgress',
 	        success: function (response) {	
 	        	$('.knob').val(data.level).trigger('change');
 	        	$('.cd-popup').addClass('is-visible');
@@ -217,8 +217,9 @@ jQuery(document).ready(function($){
 			type: 'POST',
 			data: JSON.stringify(data),
 			contentType: 'application/json',
-			url: 'http://localhost:8080/getDailyLog',
+			url: 'http://52.89.68.106:8080/getDailyLog',
 			success: function (response) {
+				console.log(response);
             	var data=response.data.dailyLogs;
             	if(data.length > 0){
             		document.getElementById('submitDaily').innerHTML="";
@@ -272,7 +273,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/getWeeklyLog',
+	        url: 'http://52.89.68.106:8080/getWeeklyLog',
 	        success: function (response) {	
 	        	var data=response.data.weeklyLog;
             	if(data.length > 0){
@@ -362,7 +363,7 @@ jQuery(document).ready(function($){
 			type: 'POST',
 			data: JSON.stringify(data),
 			contentType: 'application/json',
-			url: 'http://localhost:8080/getOccupiedTimes',
+			url: 'http://52.89.68.106:8080/getOccupiedTimes',
 			success: function (response) {	
 				var disableTimeRanges=[];
 				for(var i=0;i<response.data.appointments.length;i++){
@@ -417,7 +418,7 @@ jQuery(document).ready(function($){
 		        type: 'POST',
 		        data: JSON.stringify(data),
 		        contentType: 'application/json',
-		        url: 'http://localhost:8080/setAppointment',
+		        url: 'http://52.89.68.106:8080/setAppointment',
 		        success: function (response) {	
 		        	$('.cd-popup').addClass('is-visible');
 	        		document.getElementById('alert').innerHTML = "Appointment scheduled!";
@@ -449,7 +450,7 @@ jQuery(document).ready(function($){
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
-        url: 'http://localhost:8080/viewNotes',
+        url: 'http://52.89.68.106:8080/viewNotes',
         success: function (response) {
         	if(response.data.notes.length > 0){
 	        	for(var i=0;i<response.data.notes.length;i++){
@@ -474,7 +475,7 @@ jQuery(document).ready(function($){
 	        type: 'POST',
 	        data: JSON.stringify(data),
 	        contentType: 'application/json',
-	        url: 'http://localhost:8080/logout',
+	        url: 'http://52.89.68.106:8080/logout',
 	        success: function (response) {
 	        },
 	        error:function (data) {
