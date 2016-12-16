@@ -549,6 +549,22 @@ app.post('/getPhysicalDailyLog', function (req, res) {
     }
 });
 
+app.post('/getTags', function (req, res) {
+    var decoded = jwt.verify(req.body.token, JWTKEY);
+    if(decoded){
+        knex('tags')
+            .then(function (tags) {
+                res.json({err: false, data: {tags: tags}});
+            })
+            .catch( function (err) {
+               res.json({error: true, data: {message: err.message}});
+            });
+    }
+    else {
+        res.status(401).send({error: true, data: {message: 'invalid token'}});
+    }
+});
+
 app.post('/getNewWeeklyLog', function (req, res) {
     var decoded = jwt.verify(req.body.token, JWTKEY);
     if(decoded){
